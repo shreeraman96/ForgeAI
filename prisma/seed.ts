@@ -1,11 +1,16 @@
 import "dotenv/config";
+import { PrismaNeonHttp } from "@prisma/adapter-neon";
 import { PrismaClient } from "../src/generated/prisma/client";
 import bcrypt from "bcryptjs";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const prisma = new (PrismaClient as any)();
-
 async function main() {
+  const databaseUrl = process.env.DATABASE_URL;
+  if (!databaseUrl) throw new Error("DATABASE_URL is not set");
+
+  const adapter = new PrismaNeonHttp(databaseUrl);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const prisma = new (PrismaClient as any)({ adapter });
+
   console.log("Seeding database...");
 
   // Create test organization
@@ -49,13 +54,11 @@ async function main() {
   console.log("\nSeed complete! You can now log in with:");
   console.log("  Admin: admin@acme.com / admin123");
   console.log("  Worker: worker@acme.com / worker123");
+
+  await prisma.$disconnect();
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});
