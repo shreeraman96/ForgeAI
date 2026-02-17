@@ -63,7 +63,7 @@ export function ChatInterface() {
       try {
         const sourcesHeader = response.headers.get("X-Source-Chunks");
         if (sourcesHeader) {
-          sources = JSON.parse(sourcesHeader);
+          sources = JSON.parse(decodeURIComponent(sourcesHeader));
         }
       } catch {
         // Ignore parse errors

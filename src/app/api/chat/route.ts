@@ -87,13 +87,15 @@ export async function POST(request: Request) {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "X-Chat-Session-Id": chatSessionId!,
-        "X-Source-Chunks": JSON.stringify(
-          sourceChunks.map((c) => ({
-            id: c.chunkId,
-            documentName: c.documentName,
-            content: c.content.slice(0, 200),
-            score: c.score,
-          }))
+        "X-Source-Chunks": encodeURIComponent(
+          JSON.stringify(
+            sourceChunks.map((c) => ({
+              id: c.chunkId,
+              documentName: c.documentName,
+              content: c.content.slice(0, 200),
+              score: c.score,
+            }))
+          )
         ),
       },
     });

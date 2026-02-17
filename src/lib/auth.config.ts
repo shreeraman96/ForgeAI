@@ -4,6 +4,7 @@ import Credentials from "next-auth/providers/credentials";
 // This config is used by the middleware (Edge Runtime compatible).
 // The authorize callback is in auth.ts which runs in Node.js.
 export const authConfig: NextAuthConfig = {
+  basePath: "/api/auth",
   providers: [
     Credentials({
       credentials: {

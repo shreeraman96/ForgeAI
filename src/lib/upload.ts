@@ -4,6 +4,7 @@ export async function uploadFile(file: File) {
   const blob = await put(file.name, file, {
     access: "public",
     token: process.env.BLOB_READ_WRITE_TOKEN,
+    allowOverwrite: true
   });
   return blob;
 }
