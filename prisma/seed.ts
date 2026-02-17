@@ -7,7 +7,7 @@ async function main() {
   const databaseUrl = process.env.DATABASE_URL;
   if (!databaseUrl) throw new Error("DATABASE_URL is not set");
 
-  const adapter = new PrismaNeonHttp(databaseUrl);
+  const adapter = new PrismaNeonHttp(databaseUrl, {});
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const prisma = new (PrismaClient as any)({ adapter });
 
