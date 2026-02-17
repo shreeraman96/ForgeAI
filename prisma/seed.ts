@@ -1,15 +1,14 @@
 import "dotenv/config";
-import { PrismaNeonHttp } from "@prisma/adapter-neon";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "../src/generated/prisma/client";
 import bcrypt from "bcryptjs";
 
 async function main() {
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) throw new Error("DATABASE_URL is not set");
+  const connectionString = process.env.DATABASE_URL;
+  if (!connectionString) throw new Error("DATABASE_URL is not set");
 
-  const adapter = new PrismaNeonHttp(databaseUrl, {});
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const prisma = new (PrismaClient as any)({ adapter });
+  const adapter = new PrismaNeon({ connectionString });
+  const prisma = new PrismaClient({ adapter });
 
   console.log("Seeding database...");
 

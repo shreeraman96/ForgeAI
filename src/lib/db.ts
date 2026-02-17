@@ -1,4 +1,4 @@
-import { PrismaNeonHttp } from "@prisma/adapter-neon";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@/generated/prisma/client";
 
 const globalForPrisma = globalThis as unknown as {
@@ -6,9 +6,9 @@ const globalForPrisma = globalThis as unknown as {
 };
 
 function createPrismaClient() {
-  const adapter = new PrismaNeonHttp(process.env.DATABASE_URL!, {});
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return new (PrismaClient as any)({ adapter });
+  const connectionString = process.env.DATABASE_URL!;
+  const adapter = new PrismaNeon({ connectionString });
+  return new PrismaClient({ adapter });
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
