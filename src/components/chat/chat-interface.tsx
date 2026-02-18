@@ -25,7 +25,10 @@ export function ChatInterface() {
     }
   }, [messages]);
 
-  async function handleSend(message: string) {
+  async function handleSend(
+    message: string,
+    image?: { base64: string; mimeType: string }
+  ) {
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -48,6 +51,10 @@ export function ChatInterface() {
         body: JSON.stringify({
           message,
           sessionId: sessionId || undefined,
+          ...(image && {
+            imageBase64: image.base64,
+            imageMimeType: image.mimeType,
+          }),
         }),
       });
 

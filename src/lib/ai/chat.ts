@@ -31,6 +31,8 @@ export interface ChatStreamOptions {
   organizationId: string;
   organizationName: string;
   history?: { role: "user" | "assistant"; content: string }[];
+  imageBase64?: string;
+  imageMimeType?: string;
 }
 
 export async function streamChatResponse(
@@ -39,10 +41,21 @@ export async function streamChatResponse(
   stream: ReadableStream;
   sourceChunks: SearchResult[];
 }> {
-  const { message, organizationId, organizationName, history = [] } = options;
+  const {
+    message,
+    organizationId,
+    organizationName,
+    history = [],
+    imageBase64,
+    imageMimeType,
+  } = options;
+
+  // Use message text for embedding; fall back to a visual-query phrase when only an image is provided
+  const embeddingText =
+    message.trim() || "What is shown in this image? How do I work with it?";
 
   // Generate embedding for the query
-  const queryEmbedding = await generateEmbedding(message);
+  const queryEmbedding = await generateEmbedding(embeddingText);
 
   // Search for relevant chunks
   const sourceChunks = await searchSimilarChunks(
@@ -52,6 +65,28 @@ export async function streamChatResponse(
     0.3
   );
 
+  // Build the user message content — multimodal when an image is attached
+  let userContent: OpenAI.Chat.Completions.ChatCompletionUserMessageParam["content"];
+  if (imageBase64 && imageMimeType) {
+    userContent = [
+      {
+        type: "image_url",
+        image_url: {
+          url: `data:${imageMimeType};base64,${imageBase64}`,
+          detail: "high",
+        },
+      },
+      {
+        type: "text",
+        text:
+          message.trim() ||
+          "Describe what you see and answer using the provided documentation.",
+      },
+    ];
+  } else {
+    userContent = message;
+  }
+
   // Build messages array
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     { role: "system", content: buildSystemPrompt(organizationName, sourceChunks) },
@@ -59,7 +94,7 @@ export async function streamChatResponse(
       role: m.role as "user" | "assistant",
       content: m.content,
     })),
-    { role: "user", content: message },
+    { role: "user", content: userContent },
   ];
 
   // Stream the response

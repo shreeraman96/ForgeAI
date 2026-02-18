@@ -1,4 +1,14 @@
 import type { NextConfig } from "next";
+import withSerwistInit from "@serwist/next";
+
+const withSerwist = withSerwistInit({
+  swSrc: "src/app/sw.ts",
+  swDest: "public/sw.js",
+  // Only run during production builds. Next.js 16 uses Turbopack for `next dev`
+  // which is incompatible with serwist's webpack integration; the service worker
+  // is not needed during local development anyway.
+  disable: process.env.NODE_ENV !== "production",
+});
 
 const nextConfig: NextConfig = {
   experimental: {
@@ -10,4 +20,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSerwist(nextConfig);

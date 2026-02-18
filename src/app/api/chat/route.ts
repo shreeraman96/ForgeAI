@@ -14,7 +14,8 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { message, sessionId } = chatMessageSchema.parse(body);
+    const { message, sessionId, imageBase64, imageMimeType } =
+      chatMessageSchema.parse(body);
 
     // Get or create chat session
     let chatSessionId = sessionId;
@@ -54,6 +55,8 @@ export async function POST(request: Request) {
         role: m.role.toLowerCase() as "user" | "assistant",
         content: m.content,
       })),
+      imageBase64,
+      imageMimeType,
     });
 
     // Collect the full response for saving to DB

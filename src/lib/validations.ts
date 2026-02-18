@@ -39,8 +39,10 @@ export function getFileType(mimeType: string): string {
 }
 
 export const chatMessageSchema = z.object({
-  message: z.string().min(1).max(5000),
+  message: z.string().max(5000).default(""),
   sessionId: z.string().optional(),
+  imageBase64: z.string().optional(),
+  imageMimeType: z.string().optional(),
 });
 
 export const inviteWorkerSchema = z.object({
