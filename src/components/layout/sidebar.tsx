@@ -9,11 +9,13 @@ import {
   MessageSquare,
   Users,
   LayoutDashboard,
+  Video,
 } from "lucide-react";
 
 const adminLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/documents", label: "Documents", icon: FileText },
+  { href: "/admin/expert-captures", label: "Expert Captures", icon: Video },
   { href: "/admin/workers", label: "Workers", icon: Users },
   { href: "/chat", label: "Chat", icon: MessageSquare },
 ];

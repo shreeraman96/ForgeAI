@@ -77,7 +77,7 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
         type="file"
         className="hidden"
         multiple
-        accept=".pdf,.docx,.png,.jpg,.jpeg,.webp"
+        accept=".pdf,.docx,.png,.jpg,.jpeg,.webp,.mp3,.m4a,.wav,.mp4,.webm,.mpeg"
         onChange={(e) => {
           if (e.target.files) handleFiles(e.target.files);
         }}
@@ -93,7 +93,7 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
             {uploading ? "Uploading..." : "Drag & drop files here"}
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            PDF, DOCX, PNG, JPG up to 20MB
+            PDF, DOCX, PNG, JPG, MP3, WAV, MP4, WebM up to 25MB
           </p>
         </div>
         <Button

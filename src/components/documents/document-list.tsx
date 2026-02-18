@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { DocumentStatusBadge } from "./document-status-badge";
-import { Trash2, FileText, Image, FileIcon } from "lucide-react";
+import { Trash2, FileText, Image, FileIcon, Music, Video } from "lucide-react";
 import { toast } from "sonner";
 
 interface Document {
@@ -33,6 +33,8 @@ const fileIcons: Record<string, React.ElementType> = {
   pdf: FileText,
   docx: FileIcon,
   image: Image,
+  audio: Music,
+  video: Video,
 };
 
 function formatFileSize(bytes: number): string {

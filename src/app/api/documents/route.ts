@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { uploadFile } from "@/lib/upload";
-import { ALLOWED_FILE_TYPES, MAX_FILE_SIZE, getFileType } from "@/lib/validations";
+import { ALLOWED_FILE_TYPES, getMaxFileSize, getFileType } from "@/lib/validations";
 import { processDocument } from "@/lib/ai/process-document";
 
 export async function GET() {
@@ -38,14 +38,15 @@ export async function POST(request: Request) {
 
   if (!ALLOWED_FILE_TYPES.includes(file.type)) {
     return NextResponse.json(
-      { error: "File type not supported. Use PDF, DOCX, PNG, or JPG." },
+      { error: "File type not supported. Use PDF, DOCX, PNG, JPG, MP3, WAV, MP4, or WebM." },
       { status: 400 }
     );
   }
 
-  if (file.size > MAX_FILE_SIZE) {
+  const maxSize = getMaxFileSize(file.type);
+  if (file.size > maxSize) {
     return NextResponse.json(
-      { error: "File too large. Maximum size is 20MB." },
+      { error: `File too large. Maximum size is ${maxSize / (1024 * 1024)}MB.` },
       { status: 400 }
     );
   }
@@ -57,6 +58,7 @@ export async function POST(request: Request) {
       data: {
         fileName: file.name,
         fileType: getFileType(file.type),
+        mimeType: file.type,
         fileUrl: blob.url,
         fileSize: file.size,
         organizationId: session.user.organizationId,

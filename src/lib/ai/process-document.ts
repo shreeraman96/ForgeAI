@@ -26,18 +26,20 @@ export async function processDocument(documentId: string): Promise<void> {
     const arrayBuffer = await response.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
-    // Determine MIME type for image parser
+    // Determine MIME type for parsers that need it
     const mimeMap: Record<string, string> = {
       pdf: "application/pdf",
       docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
       image: "image/png",
+      audio: "audio/mpeg",
+      video: "video/mp4",
     };
 
     // Parse the file to extract text
     const extractedText = await parseFile(
       buffer,
       doc.fileType,
-      mimeMap[doc.fileType]
+      doc.mimeType || mimeMap[doc.fileType]
     );
 
     if (!extractedText || extractedText.trim().length === 0) {

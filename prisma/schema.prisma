@@ -56,23 +56,33 @@ model Invite {
 }
 
 model Document {
-  id             String         @id @default(cuid())
-  fileName       String
-  fileType       String
-  fileUrl        String
-  fileSize       Int
-  status         DocumentStatus @default(PENDING)
-  pageCount      Int?
-  extractedText  String?
-  errorMessage   String?
-  organizationId String
-  organization   Organization   @relation(fields: [organizationId], references: [id])
-  uploadedById   String
-  uploadedBy     User           @relation("UploadedBy", fields: [uploadedById], references: [id])
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  id                String         @id @default(cuid())
+  docType           DocType        @default(STANDARD)
+  title             String?
+  description       String?
+  expertCaptureData Json?
+  fileName          String
+  fileType          String
+  mimeType          String?
+  fileUrl           String
+  fileSize          Int
+  status            DocumentStatus @default(PENDING)
+  pageCount         Int?
+  extractedText     String?
+  errorMessage      String?
+  organizationId    String
+  organization      Organization   @relation(fields: [organizationId], references: [id])
+  uploadedById      String
+  uploadedBy        User           @relation("UploadedBy", fields: [uploadedById], references: [id])
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
 
   chunks DocumentChunk[]
+}
+
+enum DocType {
+  STANDARD
+  EXPERT_CAPTURE
 }
 
 enum DocumentStatus {
