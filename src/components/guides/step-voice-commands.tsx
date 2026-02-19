@@ -6,7 +6,7 @@ import { Mic, MicOff } from "lucide-react";
 import { toast } from "sonner";
 
 interface StepVoiceCommandsProps {
-  onCommand: (cmd: "next" | "previous" | "repeat") => void;
+  onCommand: (cmd: "next" | "previous" | "repeat" | "pause" | "play") => void;
   onQuestion: (text: string) => void;
   isPaused: boolean;
 }
@@ -112,6 +112,18 @@ export function StepVoiceCommands({
         transcript.includes("say that again")
       ) {
         onCommand("repeat");
+      } else if (
+        transcript.includes("pause") ||
+        transcript.includes("stop reading") ||
+        transcript.includes("stop audio")
+      ) {
+        onCommand("pause");
+      } else if (
+        transcript.includes("play") ||
+        transcript.includes("resume") ||
+        transcript.includes("start reading")
+      ) {
+        onCommand("play");
       } else {
         onQuestion(transcript);
       }

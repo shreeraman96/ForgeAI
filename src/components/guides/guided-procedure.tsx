@@ -133,10 +133,12 @@ export function GuidedProcedure({ documentId }: GuidedProcedureProps) {
   }
 
   // Voice command handler
-  function handleVoiceCommand(cmd: "next" | "previous" | "repeat") {
+  function handleVoiceCommand(cmd: "next" | "previous" | "repeat" | "pause" | "play") {
     if (cmd === "next") handleNext();
     else if (cmd === "previous") handlePrevious();
-    else handleRepeat();
+    else if (cmd === "repeat") handleRepeat();
+    else if (cmd === "pause") window.speechSynthesis?.pause();
+    else if (cmd === "play") window.speechSynthesis?.resume();
   }
 
   // Q&A response: speak aloud
