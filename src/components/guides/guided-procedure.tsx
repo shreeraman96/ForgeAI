@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -47,27 +47,46 @@ export function GuidedProcedure({ documentId }: GuidedProcedureProps) {
   const [completed, setCompleted] = useState(false);
   const [voiceQuestion, setVoiceQuestion] = useState<{ text: string; id: number } | null>(null);
   const [pendingSpeech, setPendingSpeech] = useState<string | null>(null);
+  // Hold utterance ref so iOS Safari doesn't garbage-collect it mid-playback
+  const responseUtteranceRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Speak chat responses via TTS — pauses mic during playback to prevent feedback loop
+  // Speak chat responses via TTS — uses 300ms delay matching the working auto-play pattern
   useEffect(() => {
     if (!pendingSpeech) return;
     if (typeof window === "undefined" || !window.speechSynthesis) return;
 
-    window.speechSynthesis.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(pendingSpeech);
-    const voices = window.speechSynthesis.getVoices();
-    const englishVoice = voices.find((v) => v.lang.startsWith("en"));
-    if (englishVoice) utterance.voice = englishVoice;
-    utterance.rate = 0.95;
-
-    // Pause mic while speaking, resume when done
-    utterance.onstart = () => setIsPlaying(true);
-    utterance.onend = () => setIsPlaying(false);
-    utterance.onerror = () => setIsPlaying(false);
-
-    window.speechSynthesis.speak(utterance);
+    const text = pendingSpeech;
     setPendingSpeech(null);
+
+    // 300ms delay: iOS needs time to settle after cancel() before a new speak()
+    // This matches the delay used by the working step auto-play in StepAudioControls
+    const timer = setTimeout(() => {
+      window.speechSynthesis.cancel();
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      // Store in ref to prevent iOS Safari from garbage-collecting the utterance
+      responseUtteranceRef.current = utterance;
+
+      const voices = window.speechSynthesis.getVoices();
+      const englishVoice = voices.find((v) => v.lang.startsWith("en"));
+      if (englishVoice) utterance.voice = englishVoice;
+      utterance.rate = 0.95;
+
+      // Pause mic while speaking, resume when done
+      utterance.onstart = () => setIsPlaying(true);
+      utterance.onend = () => {
+        setIsPlaying(false);
+        responseUtteranceRef.current = null;
+      };
+      utterance.onerror = () => {
+        setIsPlaying(false);
+        responseUtteranceRef.current = null;
+      };
+
+      window.speechSynthesis.speak(utterance);
+    }, 300);
+
+    return () => clearTimeout(timer);
   }, [pendingSpeech]);
 
   // Load guide data and create/resume session

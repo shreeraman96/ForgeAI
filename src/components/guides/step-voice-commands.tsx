@@ -102,19 +102,29 @@ export function StepVoiceCommands({
     const rec = recognitionRef.current;
     if (!rec) return;
     if (isPaused) {
-      // Mark as intentionally stopped so onend doesn't auto-restart
       pausedByTTSRef.current = true;
       try { rec.stop(); } catch { /* ignore */ }
       setIsListening(false);
     } else if (enabled) {
-      // Clear the flag then restart after a short delay to let the prior onend settle
       pausedByTTSRef.current = false;
+      // Longer delay (500ms) — iOS needs more time after TTS releases the audio session
       const t = setTimeout(() => {
         if (!isPausedRef.current && recognitionRef.current) {
-          try { recognitionRef.current.start(); } catch { /* ignore */ }
-          setIsListening(true);
+          try {
+            recognitionRef.current.start();
+            setIsListening(true);
+          } catch (e) {
+            console.warn("[VoiceCmd] Failed to restart mic after TTS:", e);
+            // Retry once more after another delay
+            setTimeout(() => {
+              try {
+                recognitionRef.current?.start();
+                setIsListening(true);
+              } catch { /* give up silently */ }
+            }, 500);
+          }
         }
-      }, 200);
+      }, 500);
       return () => clearTimeout(t);
     }
   }, [isPaused, enabled]);
@@ -158,9 +168,14 @@ export function StepVoiceCommands({
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     recognition.onerror = (event: any) => {
+      console.warn("[VoiceCmd] error:", event.error);
       if (event.error === "not-allowed") {
         toast.error("Microphone access denied for voice commands.");
         setEnabled(false);
+      } else if (event.error === "aborted" || event.error === "network") {
+        // iOS can fire these when audio session is interrupted — don't disable, just log
+      } else if (event.error === "no-speech") {
+        // Normal timeout — onend will handle restart
       }
     };
 
@@ -169,7 +184,21 @@ export function StepVoiceCommands({
       if (pausedByTTSRef.current) return;
       // Natural end (timeout, browser-triggered) — auto-restart if still enabled and not paused
       if (enabled && !isPausedRef.current) {
-        try { recognition.start(); } catch { /* ignore */ }
+        try {
+          recognition.start();
+        } catch (e) {
+          console.warn("[VoiceCmd] onend restart failed:", e);
+          setIsListening(false);
+          // Retry after delay — iOS sometimes needs a gap between stop and start
+          setTimeout(() => {
+            if (enabled && !isPausedRef.current) {
+              try {
+                recognition.start();
+                setIsListening(true);
+              } catch { setIsListening(false); }
+            }
+          }, 300);
+        }
       } else {
         setIsListening(false);
       }
