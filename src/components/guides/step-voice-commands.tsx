@@ -33,6 +33,58 @@ function createRecognition(): SpeechRecognitionInstance | null {
   return new Ctor() as SpeechRecognitionInstance;
 }
 
+type VoiceCommand = "next" | "previous" | "repeat" | "pause" | "play";
+
+const COMMAND_LABELS: Record<VoiceCommand, string> = {
+  next: "▶ Next step",
+  previous: "◀ Previous step",
+  repeat: "↺ Reading step",
+  pause: "⏸ Paused",
+  play: "▶ Resuming",
+};
+
+/**
+ * Match a transcript to a voice command.
+ * Short utterances (1-3 words) match single keywords like "read", "stop", "next".
+ * Longer utterances only match specific multi-word phrases to avoid
+ * accidentally interpreting questions as commands.
+ */
+function matchVoiceCommand(transcript: string): VoiceCommand | null {
+  const words = transcript.split(/\s+/);
+  const isShort = words.length <= 3;
+
+  // Multi-word phrases — match regardless of length (high confidence)
+  if (transcript.includes("go back")) return "previous";
+  if (
+    transcript.includes("say that again") ||
+    transcript.includes("say again") ||
+    transcript.includes("one more time") ||
+    transcript.includes("read it") ||
+    transcript.includes("read this") ||
+    transcript.includes("read the step") ||
+    transcript.includes("read step")
+  )
+    return "repeat";
+  if (transcript.includes("stop reading") || transcript.includes("stop audio"))
+    return "pause";
+  if (transcript.includes("go ahead") || transcript.includes("move on"))
+    return "next";
+  if (transcript.includes("start reading")) return "play";
+
+  // Short phrases (1-3 words) — single keyword matching
+  if (isShort) {
+    if (/\b(next|continue|done|forward|skip|proceed)\b/.test(transcript))
+      return "next";
+    if (/\b(back|previous|before)\b/.test(transcript)) return "previous";
+    if (/\b(repeat|again|read|reread)\b/.test(transcript)) return "repeat";
+    if (/\b(pause|stop|halt|mute|quiet|silence)\b/.test(transcript))
+      return "pause";
+    if (/\b(play|resume|start|speak|unmute)\b/.test(transcript)) return "play";
+  }
+
+  return null;
+}
+
 export function StepVoiceCommands({
   onCommand,
   onQuestion,
@@ -94,41 +146,10 @@ export function StepVoiceCommands({
       const transcript: string =
         event.results[event.results.length - 1][0].transcript.trim().toLowerCase();
 
-      if (
-        transcript.includes("next") ||
-        transcript.includes("continue") ||
-        transcript.includes("done")
-      ) {
-        toast.success("▶ Next step");
-        onCommand("next");
-      } else if (
-        transcript.includes("back") ||
-        transcript.includes("previous") ||
-        transcript.includes("go back")
-      ) {
-        toast.success("◀ Previous step");
-        onCommand("previous");
-      } else if (
-        transcript.includes("repeat") ||
-        transcript.includes("again") ||
-        transcript.includes("say that again")
-      ) {
-        toast.success("↺ Repeating step");
-        onCommand("repeat");
-      } else if (
-        transcript.includes("pause") ||
-        transcript.includes("stop reading") ||
-        transcript.includes("stop audio")
-      ) {
-        toast.success("⏸ Paused");
-        onCommand("pause");
-      } else if (
-        transcript.includes("play") ||
-        transcript.includes("resume") ||
-        transcript.includes("start reading")
-      ) {
-        toast.success("▶ Resuming");
-        onCommand("play");
+      const command = matchVoiceCommand(transcript);
+      if (command) {
+        toast.success(COMMAND_LABELS[command]);
+        onCommand(command);
       } else {
         toast.info(`🎤 "${transcript}"`);
         onQuestion(transcript);
