@@ -42,17 +42,28 @@ export function StepVoiceCommands({
   const [isListening, setIsListening] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const isPausedRef = useRef(isPaused);
+  // Tracks when we intentionally stopped due to TTS, so onend skips its auto-restart
+  const pausedByTTSRef = useRef(false);
 
   useEffect(() => {
     isPausedRef.current = isPaused;
     const rec = recognitionRef.current;
     if (!rec) return;
     if (isPaused) {
+      // Mark as intentionally stopped so onend doesn't auto-restart
+      pausedByTTSRef.current = true;
       try { rec.stop(); } catch { /* ignore */ }
       setIsListening(false);
     } else if (enabled) {
-      try { rec.start(); } catch { /* already started */ }
-      setIsListening(true);
+      // Clear the flag then restart after a short delay to let the prior onend settle
+      pausedByTTSRef.current = false;
+      const t = setTimeout(() => {
+        if (!isPausedRef.current && recognitionRef.current) {
+          try { recognitionRef.current.start(); } catch { /* ignore */ }
+          setIsListening(true);
+        }
+      }, 200);
+      return () => clearTimeout(t);
     }
   }, [isPaused, enabled]);
 
@@ -115,6 +126,9 @@ export function StepVoiceCommands({
     };
 
     recognition.onend = () => {
+      // If stopped intentionally due to TTS, the useEffect handles restart — don't interfere
+      if (pausedByTTSRef.current) return;
+      // Natural end (timeout, browser-triggered) — auto-restart if still enabled and not paused
       if (enabled && !isPausedRef.current) {
         try { recognition.start(); } catch { /* ignore */ }
       } else {
