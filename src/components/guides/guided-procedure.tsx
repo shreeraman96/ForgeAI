@@ -45,6 +45,7 @@ export function GuidedProcedure({ documentId }: GuidedProcedureProps) {
     return stored === null ? true : stored === "true";
   });
   const [completed, setCompleted] = useState(false);
+  const [voiceQuestion, setVoiceQuestion] = useState<{ text: string; id: number } | null>(null);
 
   // Load guide data and create/resume session
   useEffect(() => {
@@ -223,9 +224,7 @@ export function GuidedProcedure({ documentId }: GuidedProcedureProps) {
         <div className="ml-auto flex-shrink-0">
           <StepVoiceCommands
             onCommand={handleVoiceCommand}
-            onQuestion={(q) => {
-              // Scroll to chat panel by setting a trigger — handled via StepChat
-            }}
+            onQuestion={(q) => setVoiceQuestion({ text: q, id: Date.now() })}
             isPaused={isPlaying}
           />
         </div>
@@ -266,6 +265,7 @@ export function GuidedProcedure({ documentId }: GuidedProcedureProps) {
           procedureTitle={guideTitle}
           warnings={currentProcedure.warnings}
           onSpeakResponse={handleSpeakResponse}
+          voiceQuestion={voiceQuestion}
         />
       </div>
     </div>

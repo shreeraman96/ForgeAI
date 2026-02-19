@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ChevronDown, ChevronUp, Loader2, MessageSquare, Send } from "lucide-react";
@@ -19,6 +19,7 @@ interface StepChatProps {
   procedureTitle: string;
   warnings?: string[];
   onSpeakResponse?: (text: string) => void;
+  voiceQuestion?: { text: string; id: number } | null;
 }
 
 export function StepChat({
@@ -29,12 +30,21 @@ export function StepChat({
   procedureTitle,
   warnings,
   onSpeakResponse,
+  voiceQuestion,
 }: StepChatProps) {
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // When a voice question arrives, open the panel and submit it
+  useEffect(() => {
+    if (!voiceQuestion?.text) return;
+    setOpen(true);
+    handleSend(voiceQuestion.text);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceQuestion]);
 
   async function handleSend(question: string = input) {
     const q = question.trim();
