@@ -48,10 +48,25 @@ export function GuidedProcedure({ documentId }: GuidedProcedureProps) {
   const [voiceQuestion, setVoiceQuestion] = useState<{ text: string; id: number } | null>(null);
   const [pendingSpeech, setPendingSpeech] = useState<string | null>(null);
 
-  // Trigger TTS from React's effect cycle (iOS blocks speak() called deep inside async fetch)
+  // Speak chat responses via TTS — pauses mic during playback to prevent feedback loop
   useEffect(() => {
     if (!pendingSpeech) return;
-    speakText(pendingSpeech);
+    if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+    window.speechSynthesis.cancel();
+
+    const utterance = new SpeechSynthesisUtterance(pendingSpeech);
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoice = voices.find((v) => v.lang.startsWith("en"));
+    if (englishVoice) utterance.voice = englishVoice;
+    utterance.rate = 0.95;
+
+    // Pause mic while speaking, resume when done
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => setIsPlaying(false);
+
+    window.speechSynthesis.speak(utterance);
     setPendingSpeech(null);
   }, [pendingSpeech]);
 
