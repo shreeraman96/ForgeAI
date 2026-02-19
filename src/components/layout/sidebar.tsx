@@ -10,6 +10,7 @@ import {
   Users,
   LayoutDashboard,
   Video,
+  BookOpen,
 } from "lucide-react";
 
 const adminLinks = [
@@ -17,10 +18,12 @@ const adminLinks = [
   { href: "/admin/documents", label: "Documents", icon: FileText },
   { href: "/admin/expert-captures", label: "Expert Captures", icon: Video },
   { href: "/admin/workers", label: "Workers", icon: Users },
+  { href: "/guides", label: "Guides", icon: BookOpen },
   { href: "/chat", label: "Chat", icon: MessageSquare },
 ];
 
 const workerLinks = [
+  { href: "/guides", label: "Guides", icon: BookOpen },
   { href: "/chat", label: "Chat", icon: MessageSquare },
 ];
 

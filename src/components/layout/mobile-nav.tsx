@@ -17,6 +17,7 @@ import {
   MessageSquare,
   Users,
   LayoutDashboard,
+  BookOpen,
 } from "lucide-react";
 import { useState } from "react";
 
@@ -24,10 +25,12 @@ const adminLinks = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/documents", label: "Documents", icon: FileText },
   { href: "/admin/workers", label: "Workers", icon: Users },
+  { href: "/guides", label: "Guides", icon: BookOpen },
   { href: "/chat", label: "Chat", icon: MessageSquare },
 ];
 
 const workerLinks = [
+  { href: "/guides", label: "Guides", icon: BookOpen },
   { href: "/chat", label: "Chat", icon: MessageSquare },
 ];
 
