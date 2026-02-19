@@ -99,32 +99,38 @@ export function StepVoiceCommands({
         transcript.includes("continue") ||
         transcript.includes("done")
       ) {
+        toast.success("▶ Next step");
         onCommand("next");
       } else if (
         transcript.includes("back") ||
         transcript.includes("previous") ||
         transcript.includes("go back")
       ) {
+        toast.success("◀ Previous step");
         onCommand("previous");
       } else if (
         transcript.includes("repeat") ||
         transcript.includes("again") ||
         transcript.includes("say that again")
       ) {
+        toast.success("↺ Repeating step");
         onCommand("repeat");
       } else if (
         transcript.includes("pause") ||
         transcript.includes("stop reading") ||
         transcript.includes("stop audio")
       ) {
+        toast.success("⏸ Paused");
         onCommand("pause");
       } else if (
         transcript.includes("play") ||
         transcript.includes("resume") ||
         transcript.includes("start reading")
       ) {
+        toast.success("▶ Resuming");
         onCommand("play");
       } else {
+        toast.info(`🎤 "${transcript}"`);
         onQuestion(transcript);
       }
     };

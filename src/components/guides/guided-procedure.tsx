@@ -46,6 +46,14 @@ export function GuidedProcedure({ documentId }: GuidedProcedureProps) {
   });
   const [completed, setCompleted] = useState(false);
   const [voiceQuestion, setVoiceQuestion] = useState<{ text: string; id: number } | null>(null);
+  const [pendingSpeech, setPendingSpeech] = useState<string | null>(null);
+
+  // Trigger TTS from React's effect cycle (iOS blocks speak() called deep inside async fetch)
+  useEffect(() => {
+    if (!pendingSpeech) return;
+    speakText(pendingSpeech);
+    setPendingSpeech(null);
+  }, [pendingSpeech]);
 
   // Load guide data and create/resume session
   useEffect(() => {
@@ -142,9 +150,9 @@ export function GuidedProcedure({ documentId }: GuidedProcedureProps) {
     else if (cmd === "play") window.speechSynthesis?.resume();
   }
 
-  // Q&A response: speak aloud
+  // Q&A response: queue via state so speakText fires from React's effect cycle, not async fetch
   function handleSpeakResponse(text: string) {
-    speakText(text);
+    setPendingSpeech(text);
   }
 
   // --- Render states ---
