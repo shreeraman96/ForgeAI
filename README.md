@@ -93,6 +93,48 @@ ForgeAI converts your existing documentation and expert knowledge into an intell
 
 **As a defense RF systems integrator,** I want to upload equipment integration guides and interference mitigation procedures, so field technicians on deployment can access AI-guided troubleshooting for RF frequency conflicts without needing connectivity to a central office.
 
+### Automotive Manufacturing
+
+**As an assembly line team member,** I want to access the current standardized work sheet for my station on my mobile device, so I can instantly verify the correct operation sequence, torque specifications, and quality checkpoints without leaving my station to find a binder or ask my team leader.
+
+**As a maintenance technician,** I want to look up the exact lockout/tagout procedure for a specific machine by equipment ID, so I can safely isolate all energy sources — electrical, pneumatic, hydraulic — before performing repairs, without memorizing hundreds of unique LOTO sequences across the plant.
+
+**As a body shop quality inspector,** I want to photograph a suspect weld and ask the AI whether it meets the OEM weld standard, so I can make an accept/reject decision within my 55-second inspection window without waiting for a quality engineer to walk over.
+
+**As a plant maintenance technician,** I want to query uploaded FANUC, KUKA, or ABB robot manuals by fault code number, so I can immediately understand the root cause and corrective action for a robot alarm at 2:00 AM without waiting for a specialist to arrive.
+
+**As an assembly team leader,** I want to receive AI-summarized engineering change notices and query which VINs are affected by a specific ECN, so I can brief my team at shift startup and ensure the correct procedure is applied to every vehicle from the effective changeover point.
+
+**As a paint shop PDR operator,** I want to photograph a paint defect on a vehicle and ask the AI for the accept/reject criteria by panel location, so I can determine whether to buff out, spot-repair, or escalate to a full respray — without consulting a separate reference binder.
+
+**As a press operator,** I want to query the first-off inspection requirements after a die change — dimensions, tolerances, acceptance criteria — so I can complete the first-off form correctly and release production without waiting for a quality technician to locate the control plan.
+
+**As a new assembly line worker,** I want to watch expert capture videos of experienced assemblers performing each station's operations, so I can build correct muscle memory before going live on the line — reducing the risk of quality escapes during the first days on a new station.
+
+**As a skilled trades electrician,** I want to ask voice questions mid-repair about a specific machine's wiring diagram or hydraulic schematic, so I can confirm the correct circuit or valve sequence without putting down tools or climbing out of a pit to access a terminal.
+
+**As a quality technician conducting layered process audits,** I want to query the AI for the critical characteristic fasteners at a given station and their required torque values, so I can ask targeted LPA questions and immediately identify whether workers know the CC from standard fasteners.
+
+**As an assembly plant training coordinator,** I want to upload expert walkthrough videos of veteran assemblers performing complex multi-variant procedures, so the AI extracts structured knowledge that remains accessible after the expert retires or transfers — preventing the loss of tribal knowledge.
+
+**As a worker at a chassis assembly station,** I want to ask the AI "which procedure applies to this vehicle?" by scanning the build sheet or VIN barcode, so I can instantly pull the correct torque specs and operation sequence for the specific powertrain, trim level, and option content — without misapplying an old-model or wrong-variant procedure.
+
+**As a maintenance planner,** I want to upload OEM equipment manuals for stamping presses, conveyors, and robotic weld cells so technicians can query PM task lists, lubrication specifications, and calibration intervals by equipment ID, reducing reliance on aging paper binders and printed lube charts.
+
+**As a new model introduction (NMI) launch coordinator,** I want to upload draft work instructions and have workers query the AI for the latest procedure for each station, so that during the daily ECN churn of a vehicle launch — when procedures change multiple times per week — workers always access the current version rather than a superseded one.
+
+**As a worker in a paint shop adhesive application area,** I want to instantly retrieve the safety data sheet for any chemical container by scanning its label or asking by product name, so I can access first aid measures, required PPE, and spill containment steps within seconds of an exposure — meeting OSHA SDS access requirements without hunting for a binder.
+
+**As an end-of-line test technician,** I want to query the alignment specification, headlamp aiming tolerance, or ADAS calibration target distance for the specific vehicle model and trim currently on my station, so I can confirm pass/fail criteria without consulting a separate spec book for each model variant.
+
+**As a body shop team leader,** I want to upload weld standards and visual defect reference documents so workers can query defect descriptions — expulsion, insufficient nugget, burn-through — with accept/reject criteria and reaction plans, enabling faster inline quality decisions without waiting for a quality engineer.
+
+**As an assembly plant operations manager,** I want frontline workers to capture photos of completed work at safety-critical stations — torque verification, seal application, brake line routing — so the AI can compare against the documented standard and flag non-conformances before the vehicle advances to the next station.
+
+**As a material handler,** I want to ask the AI which part number should be loaded at a given station for the current vehicle build, so I can verify I've pulled the correct component after an engineering change or part supersession — preventing quality escapes caused by loading a superseded part.
+
+**As an assembly line worker returning after summer shutdown,** I want to access guided procedures for my restaffed station that highlight what changed from the previous model year — new torque values, revised sequences, different fastener types — so I can quickly internalize the changes before production restarts without relying solely on a brief team leader briefing.
+
 ---
 
 ## Tech Stack
