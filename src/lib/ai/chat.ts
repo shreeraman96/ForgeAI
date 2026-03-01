@@ -4,13 +4,17 @@ import { searchSimilarChunks, SearchResult } from "@/lib/vectors";
 
 const openai = new OpenAI();
 
-function buildSystemPrompt(orgName: string, context: SearchResult[]): string {
+function buildSystemPrompt(orgName: string, context: SearchResult[], hasImage: boolean): string {
   const contextBlock = context
     .map(
       (c, i) =>
         `[Source ${i + 1}: "${c.documentName}"]\n${c.content}`
     )
     .join("\n\n---\n\n");
+
+  const imageRule = hasImage
+    ? `- An image has been attached. Use your vision capabilities to analyze and describe what you see in the image, then cross-reference with the provided documentation to give specific guidance.`
+    : "";
 
   return `You are ForgeAI, an AI knowledge assistant for ${orgName}. Your job is to help frontline workers by answering questions using ONLY the company's own documentation.
 
@@ -21,7 +25,7 @@ RULES:
 - Be concise and practical. Workers are on the shop floor — give them clear, actionable answers.
 - If a procedure has steps, number them clearly.
 - For specs and measurements, always include units.
-
+${imageRule}
 CONTEXT FROM COMPANY DOCUMENTS:
 ${contextBlock || "No relevant documents found."}`;
 }
@@ -89,7 +93,7 @@ export async function streamChatResponse(
 
   // Build messages array
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
-    { role: "system", content: buildSystemPrompt(organizationName, sourceChunks) },
+    { role: "system", content: buildSystemPrompt(organizationName, sourceChunks, !!(imageBase64 && imageMimeType)) },
     ...history.slice(-6).map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
