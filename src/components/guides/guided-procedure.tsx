@@ -64,6 +64,7 @@ export function GuidedProcedure({ documentId }: GuidedProcedureProps) {
       window.speechSynthesis.cancel();
 
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
       // Store in ref to prevent iOS Safari from garbage-collecting the utterance
       responseUtteranceRef.current = utterance;
 

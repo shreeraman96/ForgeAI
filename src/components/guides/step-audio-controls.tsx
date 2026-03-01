@@ -36,6 +36,7 @@ export function speakText(text: string) {
   if (typeof window === "undefined" || !window.speechSynthesis) return;
   window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
   const voices = window.speechSynthesis.getVoices();
   const englishVoice = voices.find((v) => v.lang.startsWith("en"));
   if (englishVoice) utterance.voice = englishVoice;
@@ -60,6 +61,7 @@ export function StepAudioControls({
     window.speechSynthesis.cancel();
 
     const utterance = new SpeechSynthesisUtterance(speechText);
+    utterance.lang = "en-US";
     const voices = window.speechSynthesis.getVoices();
     const englishVoice = voices.find((v) => v.lang.startsWith("en"));
     if (englishVoice) utterance.voice = englishVoice;

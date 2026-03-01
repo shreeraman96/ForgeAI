@@ -30,6 +30,7 @@ export function createSilenceDetector(
   let silentSince: number | null = null;
   let currentLevel = 0;
   let triggered = false;
+  let heardSpeech = false;
 
   const detector: SilenceDetector = {
     onSilence: null,
@@ -37,6 +38,7 @@ export function createSilenceDetector(
     start(stream: MediaStream) {
       this.stop();
       triggered = false;
+      heardSpeech = false;
 
       audioContext = new AudioContext();
       analyser = audioContext.createAnalyser();
@@ -64,15 +66,18 @@ export function createSilenceDetector(
         }
         currentLevel = Math.sqrt(sum / dataArray.length);
 
-        if (currentLevel < threshold) {
+        if (currentLevel >= threshold) {
+          // User is speaking — mark that we've heard speech and reset silence timer
+          heardSpeech = true;
+          silentSince = null;
+        } else if (heardSpeech) {
+          // Only start counting silence AFTER we've heard speech at least once
           if (silentSince === null) {
             silentSince = Date.now();
           } else if (Date.now() - silentSince >= duration) {
             triggered = true;
             detector.onSilence?.();
           }
-        } else {
-          silentSince = null;
         }
       }, interval);
     },
@@ -93,6 +98,7 @@ export function createSilenceDetector(
       silentSince = null;
       currentLevel = 0;
       triggered = false;
+      heardSpeech = false;
     },
 
     getLevel() {

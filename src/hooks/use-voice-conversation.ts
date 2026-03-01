@@ -11,10 +11,10 @@ export type TtsMode = "browser" | "openai";
 function getBestMimeType(): string {
   if (typeof MediaRecorder === "undefined") return "";
   const candidates = [
-    "audio/mp4",               // iOS Safari 16+
-    "audio/webm;codecs=opus",  // Chrome / Android
+    "audio/webm;codecs=opus",  // Chrome / Android (native, best Whisper compat)
     "audio/webm",
     "audio/ogg;codecs=opus",
+    "audio/mp4",               // iOS Safari 16+ (fallback)
   ];
   return candidates.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
 }
@@ -54,6 +54,7 @@ export function useVoiceConversation({
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const levelPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const generationRef = useRef(0);
   const ttsModeRef = useRef(ttsMode);
   const onSendMessageRef = useRef(onSendMessage);
 
@@ -70,21 +71,45 @@ export function useVoiceConversation({
     const stream = streamRef.current;
     if (!stream) return;
 
-    chunksRef.current = [];
+    // Increment generation — any in-flight onstop from a previous recorder will
+    // see a stale generation and bail out instead of interfering.
+    const gen = ++generationRef.current;
+
+    // Detach handlers from old recorder so stopping it won't trigger onstop logic
+    if (mediaRecorderRef.current) {
+      mediaRecorderRef.current.ondataavailable = null;
+      mediaRecorderRef.current.onstop = null;
+      if (mediaRecorderRef.current.state === "recording") {
+        try { mediaRecorderRef.current.stop(); } catch (e) { /* ignore */ }
+      }
+    }
+    silenceDetectorRef.current?.stop();
+
     const mimeType = getBestMimeType();
     const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
     mediaRecorderRef.current = recorder;
+    const recordingStartTime = Date.now();
+    let recordedBlob: Blob | null = null;
 
     recorder.ondataavailable = (e) => {
-      if (e.data.size > 0) chunksRef.current.push(e.data);
+      if (e.data.size > 0) recordedBlob = e.data;
     };
 
     recorder.onstop = async () => {
+      // Bail out if this handler belongs to a stale generation
+      if (gen !== generationRef.current) return;
       if (stateRef.current === "idle") return; // stopped by user exit
 
-      const mType = mimeType || "audio/webm";
-      const blob = new Blob(chunksRef.current, { type: mType });
-      if (blob.size < 100) {
+      // Ignore recordings shorter than 500ms — likely just noise
+      const duration = Date.now() - recordingStartTime;
+      if (duration < 500) {
+        updateState("listening");
+        startListening();
+        return;
+      }
+
+      // Without timeslice, ondataavailable fires once with a single complete blob
+      if (!recordedBlob || recordedBlob.size < 1000) {
         // Too small — probably no real audio captured
         updateState("listening");
         startListening();
@@ -94,9 +119,14 @@ export function useVoiceConversation({
       updateState("transcribing");
 
       try {
-        const ext = mType.includes("mp4") ? "mp4" : "webm";
+        const actualMimeType = recorder.mimeType || mimeType || "audio/webm";
+        const ext = actualMimeType.includes("mp4") || actualMimeType.includes("m4a")
+          ? "mp4"
+          : actualMimeType.includes("ogg")
+          ? "ogg"
+          : "webm";
         const formData = new FormData();
-        formData.append("audio", blob, `recording.${ext}`);
+        formData.append("audio", recordedBlob, `recording.${ext}`);
 
         abortControllerRef.current = new AbortController();
         const res = await fetch("/api/transcribe", {
@@ -105,12 +135,14 @@ export function useVoiceConversation({
           signal: abortControllerRef.current.signal,
         });
 
+        if (gen !== generationRef.current) return; // interrupted during fetch
+
         if (!res.ok) throw new Error("Transcription failed");
         const { text } = await res.json();
 
         if (!text?.trim()) {
           toast.error("No speech detected. Listening again...");
-          if (stateRef.current !== "idle") {
+          if (stateRef.current !== "idle" && gen === generationRef.current) {
             updateState("listening");
             startListening();
           }
@@ -123,24 +155,29 @@ export function useVoiceConversation({
         // Send through existing chat pipeline
         const responseText = await onSendMessageRef.current(text.trim());
 
+        if (gen !== generationRef.current) return; // interrupted during chat
         if (stateRef.current === "idle") return; // user exited during thinking
 
         // Speak the response
         updateState("speaking");
         await speakResponse(responseText);
 
-        if (stateRef.current === "idle") return;
+        // Only resume listening if we're still in "speaking" state AND
+        // this generation is still current. If user interrupted, state is
+        // already "listening" and interrupt() already called startListening().
+        if (stateRef.current !== "speaking" || gen !== generationRef.current) return;
 
         // Resume listening after speaking
         updateState("listening");
         // iOS needs a delay after TTS releases the audio session
         setTimeout(() => {
-          if (stateRef.current === "listening") {
+          if (stateRef.current === "listening" && gen === generationRef.current) {
             startListening();
           }
         }, 400);
       } catch (error) {
         if (error instanceof DOMException && error.name === "AbortError") return;
+        if (gen !== generationRef.current) return;
         console.error("Voice conversation error:", error);
         toast.error("Something went wrong. Listening again...");
         if (stateRef.current !== "idle") {
@@ -150,13 +187,14 @@ export function useVoiceConversation({
       }
     };
 
-    recorder.start(250);
+    // No timeslice — ondataavailable fires once on stop() with a single valid blob.
+    recorder.start();
     updateState("listening");
 
     // Set up silence detection to auto-stop recording
-    const detector = createSilenceDetector({ silenceDuration: 1500 });
+    const detector = createSilenceDetector({ silenceDuration: 2000 });
     detector.onSilence = () => {
-      if (stateRef.current === "listening" && mediaRecorderRef.current?.state === "recording") {
+      if (gen === generationRef.current && stateRef.current === "listening" && mediaRecorderRef.current?.state === "recording") {
         mediaRecorderRef.current.stop();
         silenceDetectorRef.current?.stop();
       }
@@ -183,6 +221,7 @@ export function useVoiceConversation({
 
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = "en-US";
       const voices = window.speechSynthesis.getVoices();
       const englishVoice = voices.find((v) => v.lang.startsWith("en"));
       if (englishVoice) utterance.voice = englishVoice;

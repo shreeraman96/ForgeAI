@@ -24,6 +24,14 @@ function getBestMimeType(): string {
   return candidates.find((t) => MediaRecorder.isTypeSupported(t)) ?? "";
 }
 
+/** Maps a MIME type to a Whisper-supported file extension. */
+function getExtension(mimeType: string): string {
+  if (mimeType.includes("mp4") || mimeType.includes("m4a")) return "mp4";
+  if (mimeType.includes("ogg")) return "ogg";
+  if (mimeType.includes("wav")) return "wav";
+  return "webm";
+}
+
 export function VoiceRecorder({ onTranscription, disabled }: VoiceRecorderProps) {
   const [state, setState] = useState<RecorderState>("idle");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -57,10 +65,11 @@ export function VoiceRecorder({ onTranscription, disabled }: VoiceRecorderProps)
       };
 
       recorder.onstop = async () => {
-        const blob = new Blob(chunksRef.current, {
-          type: mimeType || "audio/webm",
-        });
-        await transcribe(blob, mimeType);
+        // Use recorder.mimeType (actual format chosen by browser) rather than
+        // our requested mimeType — they can differ when getBestMimeType() returns "".
+        const actualMimeType = recorder.mimeType || mimeType || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type: actualMimeType });
+        await transcribe(blob, actualMimeType);
       };
 
       recorder.start(250); // collect chunks every 250ms
@@ -96,7 +105,7 @@ export function VoiceRecorder({ onTranscription, disabled }: VoiceRecorderProps)
 
   async function transcribe(blob: Blob, mimeType: string) {
     try {
-      const ext = mimeType.includes("mp4") ? "mp4" : "webm";
+      const ext = getExtension(mimeType);
       const formData = new FormData();
       formData.append("audio", blob, `recording.${ext}`);
 
