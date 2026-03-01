@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ForgeAI — Product Pitch</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+      --black: #0a0a0a;
+      --near-black: #111111;
+      --dark: #1a1a1a;
+      --mid: #2a2a2a;
+      --accent: #4f46e5;
+      --accent-light: #818cf8;
+      --accent-pale: #eef2ff;
+      --green: #10b981;
+      --green-pale: #d1fae5;
+      --amber: #f59e0b;
+      --amber-pale: #fef3c7;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background: var(--white);
+      font-size: 10pt;
+      line-height: 1.6;
+    }
+
+    /* ── Page setup ── */
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 0;
+      margin: 0 auto;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+    }
+    .page:last-child { page-break-after: avoid; }
+
+    /* ══════════════════════════════════════
+       PAGE 1 — COVER
+    ══════════════════════════════════════ */
+    .cover {
+      background: var(--near-black);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 60px 64px;
+      min-height: 297mm;
+      position: relative;
+    }
+    .cover::before {
+      content: '';
+      position: absolute;
+      top: -120px; right: -120px;
+      width: 480px; height: 480px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79,70,229,0.35) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .cover::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; left: 40px;
+      width: 320px; height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16,185,129,0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cover-badge {
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-light);
+      background: rgba(79,70,229,0.15);
+      border: 1px solid rgba(129,140,248,0.3);
+      border-radius: 20px;
+      padding: 5px 14px;
+      display: inline-block;
+      margin-bottom: 32px;
+    }
+
+    .cover-logo {
+      font-size: 52pt;
+      font-weight: 900;
+      color: var(--white);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .cover-logo span { color: var(--accent-light); }
+
+    .cover-tagline {
+      font-size: 18pt;
+      font-weight: 300;
+      color: rgba(255,255,255,0.75);
+      margin-bottom: 40px;
+      max-width: 420px;
+      line-height: 1.4;
+    }
+
+    .cover-divider {
+      width: 48px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      border-radius: 2px;
+      margin-bottom: 40px;
+    }
+
+    .cover-summary {
+      font-size: 11pt;
+      color: rgba(255,255,255,0.6);
+      max-width: 500px;
+      line-height: 1.7;
+    }
+
+    .cover-footer {
+      position: absolute;
+      bottom: 48px;
+      left: 64px;
+      right: 64px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      padding-top: 20px;
+    }
+    .cover-footer-text {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.35);
+      letter-spacing: 0.05em;
+    }
+    .cover-footer-url {
+      font-size: 8pt;
+      font-weight: 500;
+      color: var(--accent-light);
+    }
+
+    /* ══════════════════════════════════════
+       INNER PAGES
+    ══════════════════════════════════════ */
+    .inner {
+      padding: 52px 64px;
+      min-height: 297mm;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 36px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header-logo {
+      font-size: 12pt;
+      font-weight: 800;
+      color: var(--black);
+      letter-spacing: -0.02em;
+    }
+    .page-header-logo span { color: var(--accent); }
+    .page-number {
+      font-size: 8pt;
+      color: var(--muted);
+    }
+
+    h2 {
+      font-size: 22pt;
+      font-weight: 800;
+      color: var(--black);
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+    .section-label {
+      font-size: 7.5pt;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .section-intro {
+      font-size: 10.5pt;
+      color: var(--muted);
+      margin-bottom: 28px;
+      max-width: 560px;
+      line-height: 1.6;
+    }
+
+    /* ── Problem ── */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 28px;
+    }
+    .problem-card {
+      background: #fafafa;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .problem-card-icon {
+      font-size: 18pt;
+      margin-bottom: 10px;
+    }
+    .problem-card h4 {
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 6px;
+    }
+    .problem-card p {
+      font-size: 9pt;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .stat-box {
+      background: var(--accent-pale);
+      border-radius: 10px;
+      padding: 16px 20px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 22pt;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 8pt;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* ── Solution ── */
+    .solution-hero {
+      background: var(--near-black);
+      border-radius: 14px;
+      padding: 32px;
+      margin-bottom: 20px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .solution-hero::before {
+      content: '';
+      position: absolute;
+      top: -60px; right: -60px;
+      width: 220px; height: 220px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79,70,229,0.4) 0%, transparent 70%);
+    }
+    .solution-hero h3 {
+      font-size: 14pt;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.02em;
+      margin-bottom: 10px;
+    }
+    .solution-hero p {
+      font-size: 10pt;
+      color: rgba(255,255,255,0.65);
+      line-height: 1.6;
+      max-width: 460px;
+    }
+
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+    .flow-step {
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-size: 8pt;
+      color: rgba(255,255,255,0.8);
+      font-weight: 500;
+    }
+    .flow-arrow {
+      color: var(--accent-light);
+      font-size: 10pt;
+    }
+
+    .feature-grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .feature-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px 20px;
+    }
+    .feature-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14pt;
+      flex-shrink: 0;
+    }
+    .icon-blue { background: var(--accent-pale); }
+    .icon-green { background: var(--green-pale); }
+    .icon-amber { background: var(--amber-pale); }
+    .icon-dark { background: #f3f4f6; }
+
+    .feature-card h4 {
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--black);
+    }
+    .feature-card p {
+      font-size: 9pt;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── How it works ── */
+    .pipeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .pipeline-step:last-child { margin-bottom: 0; }
+    .pipeline-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-size: 9pt;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+    .pipeline-body h4 {
+      font-size: 10pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 3px;
+    }
+    .pipeline-body p {
+      font-size: 9pt;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .pipeline-connector {
+      width: 28px;
+      display: flex;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .pipeline-line {
+      width: 2px;
+      height: 16px;
+      background: var(--border);
+      margin: 0 auto;
+    }
+
+    /* ── Mobile PWA ── */
+    .pwa-hero {
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      border-radius: 14px;
+      padding: 32px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .pwa-hero::after {
+      content: '';
+      position: absolute;
+      bottom: -80px; right: -80px;
+      width: 260px; height: 260px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16,185,129,0.25) 0%, transparent 70%);
+    }
+    .pwa-hero h3 {
+      font-size: 14pt;
+      font-weight: 800;
+      color: white;
+      margin-bottom: 6px;
+    }
+    .pwa-hero .sub {
+      font-size: 9pt;
+      color: rgba(255,255,255,0.5);
+      margin-bottom: 20px;
+    }
+    .pwa-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pwa-chip {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 4px 12px;
+      font-size: 8pt;
+      color: rgba(255,255,255,0.8);
+      font-weight: 500;
+    }
+    .pwa-chip.green {
+      background: rgba(16,185,129,0.15);
+      border-color: rgba(16,185,129,0.3);
+      color: #6ee7b7;
+    }
+
+    .pwa-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .pwa-detail {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+    }
+    .pwa-detail-icon { font-size: 16pt; margin-bottom: 8px; }
+    .pwa-detail h4 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 5px;
+    }
+    .pwa-detail p {
+      font-size: 8.5pt;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Market & Roadmap ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+    .box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 22px;
+    }
+    .box h3 {
+      font-size: 11pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 14px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .check-list { list-style: none; }
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 9pt;
+      color: var(--text);
+      margin-bottom: 9px;
+      line-height: 1.4;
+    }
+    .check-list li::before {
+      content: '✓';
+      color: var(--green);
+      font-weight: 700;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    .roadmap-item {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 12px;
+    }
+    .roadmap-item:last-child { margin-bottom: 0; }
+    .roadmap-badge {
+      flex-shrink: 0;
+      border-radius: 6px;
+      padding: 3px 9px;
+      font-size: 7.5pt;
+      font-weight: 700;
+    }
+    .badge-done {
+      background: var(--green-pale);
+      color: #059669;
+    }
+    .badge-next {
+      background: var(--amber-pale);
+      color: #d97706;
+    }
+    .badge-future {
+      background: var(--accent-pale);
+      color: var(--accent);
+    }
+    .roadmap-text h4 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 2px;
+    }
+    .roadmap-text p {
+      font-size: 8.5pt;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* ── CTA page ── */
+    .cta-page {
+      background: var(--near-black);
+      min-height: 297mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-page::before {
+      content: '';
+      position: absolute;
+      top: -100px; left: 50%;
+      transform: translateX(-50%);
+      width: 500px; height: 500px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(79,70,229,0.25) 0%, transparent 65%);
+    }
+    .cta-label {
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent-light);
+      margin-bottom: 20px;
+    }
+    .cta-heading {
+      font-size: 32pt;
+      font-weight: 900;
+      color: white;
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      max-width: 480px;
+      margin: 0 auto 20px;
+    }
+    .cta-heading span { color: var(--accent-light); }
+    .cta-sub {
+      font-size: 11pt;
+      color: rgba(255,255,255,0.55);
+      max-width: 400px;
+      margin: 0 auto 40px;
+      line-height: 1.6;
+    }
+    .cta-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      max-width: 560px;
+      width: 100%;
+    }
+    .cta-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 20px 16px;
+    }
+    .cta-card-icon { font-size: 18pt; margin-bottom: 8px; }
+    .cta-card h4 {
+      font-size: 9pt;
+      font-weight: 700;
+      color: white;
+      margin-bottom: 4px;
+    }
+    .cta-card p {
+      font-size: 8pt;
+      color: rgba(255,255,255,0.45);
+    }
+    .cta-footer {
+      position: absolute;
+      bottom: 40px;
+      font-size: 8.5pt;
+      color: rgba(255,255,255,0.3);
+    }
+
+    /* ── Tech stack strip ── */
+    .tech-strip {
+      background: #f8fafc;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin-top: auto;
+    }
+    .tech-strip-label {
+      font-size: 7.5pt;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-right: 4px;
+    }
+    .tech-tag {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 3px 9px;
+      font-size: 8pt;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* Print */
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page { page-break-after: always; }
+      .page:last-child { page-break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ PAGE 1: COVER ══ -->
+  <div class="page">
+    <div class="cover">
+      <div class="cover-badge">Product Overview · 2026</div>
+      <div class="cover-logo">Forge<span>AI</span></div>
+      <div class="cover-tagline">Your workforce's AI brain — on the floor, in their hands.</div>
+      <div class="cover-divider"></div>
+      <div class="cover-summary">
+        ForgeAI turns your SOPs, manuals, training docs, and expert videos into
+        a living knowledge base — so your frontline workers get instant,
+        accurate answers from any phone, anywhere on the floor.
+      </div>
+      <div class="cover-footer">
+        <div class="cover-footer-text">CONFIDENTIAL · ForgeAI · 2026</div>
+        <div class="cover-footer-url">forgeai-chi.vercel.app</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 2: PROBLEM ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">02 / 06</div>
+      </div>
+
+      <div class="section-label">The Problem</div>
+      <h2>Frontline workers are flying blind</h2>
+      <p class="section-intro">
+        Your SOPs, manuals, and decades of expert knowledge sit in binders, shared drives, and people's heads —
+        inaccessible when it matters most.
+      </p>
+
+      <div class="problem-grid">
+        <div class="problem-card">
+          <div class="problem-card-icon">📂</div>
+          <h4>Knowledge is trapped in documents</h4>
+          <p>Hundreds of PDFs, binders, and Word docs that nobody can find — let alone search — on the shop floor.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card-icon">🕐</div>
+          <h4>Every question costs time</h4>
+          <p>Workers stop what they're doing, find a supervisor, wait for an answer. Multiply by hundreds of questions per week.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card-icon">👴</div>
+          <h4>Expert knowledge walks out the door</h4>
+          <p>When your senior technician retires, years of tacit knowledge goes with them. There's no system to capture it.</p>
+        </div>
+        <div class="problem-card">
+          <div class="problem-card-icon">🔒</div>
+          <h4>Generic AI can't be trusted</h4>
+          <p>ChatGPT doesn't know your machines, your parts, or your procedures. Workers can't rely on it for safety-critical answers.</p>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-number">23%</div>
+          <div class="stat-label">of work time spent searching for information<br><em>(IDC Research)</em></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">$47B</div>
+          <div class="stat-label">lost annually to inefficient knowledge transfer in manufacturing</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">50%</div>
+          <div class="stat-label">of manufacturing workforce turning over within 5 years</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 3: SOLUTION ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">03 / 06</div>
+      </div>
+
+      <div class="section-label">The Solution</div>
+      <h2>Drop in your docs. Ask anything.</h2>
+      <p class="section-intro">
+        ForgeAI turns your existing documentation into a live, AI-powered knowledge base —
+        grounded in your content, not the internet.
+      </p>
+
+      <div class="solution-hero">
+        <h3>Answers that come straight from your documents</h3>
+        <p>
+          Every answer ForgeAI gives is sourced directly from the files you upload.
+          Workers see exactly which document the answer came from — giving them, and you,
+          full confidence and a clear paper trail.
+        </p>
+        <div class="flow-diagram">
+          <div class="flow-step">You upload your docs</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">AI reads &amp; organizes everything</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">Worker asks a question</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">Most relevant content found instantly</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">AI answers with source reference</div>
+        </div>
+      </div>
+
+      <div class="feature-grid-2">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-blue">📄</div>
+            <h4>Upload Any Document</h4>
+          </div>
+          <p>PDFs, Word docs, images, audio clips, training videos — ForgeAI reads them all and makes them instantly searchable. No manual tagging, no reformatting.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-green">🎥</div>
+            <h4>Expert Capture</h4>
+          </div>
+          <p>Record a senior employee doing their job. ForgeAI watches and listens to the video, then automatically writes up the steps, safety notes, and Q&amp;As — preserving their expertise forever.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-amber">💬</div>
+            <h4>Instant AI Answers</h4>
+          </div>
+          <p>Workers type or speak their question and get a clear answer in seconds — with a link to the exact source document. No more hunting through binders or waiting for a supervisor.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-dark">⚙️</div>
+            <h4>Manager Dashboard</h4>
+          </div>
+          <p>Managers upload documents, invite workers, and see the status of everything in one clean view. Workers only see the chat — no clutter, no confusion.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 4: MOBILE ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">04 / 06</div>
+      </div>
+
+      <div class="section-label">Mobile — Works Everywhere</div>
+      <h2>On the floor, in their hands.</h2>
+      <p class="section-intro">
+        ForgeAI works on any iPhone or Android phone — no IT team, no app store download required.
+        Workers tap one icon on their home screen and they're in.
+      </p>
+
+      <div class="pwa-hero">
+        <h3>Works like an app. Installs like a website.</h3>
+        <div class="sub">No download, no IT request, no new hardware — live today</div>
+        <div class="pwa-chips">
+          <div class="pwa-chip green">✓ Installs on iPhone &amp; Android</div>
+          <div class="pwa-chip green">✓ Point camera, get answers</div>
+          <div class="pwa-chip green">✓ Speak your question, hear the answer</div>
+          <div class="pwa-chip green">✓ Works even with patchy signal</div>
+          <div class="pwa-chip">Smart glasses support — coming in Phase 3</div>
+        </div>
+      </div>
+
+      <div class="pwa-detail-grid">
+        <div class="pwa-detail">
+          <div class="pwa-detail-icon">📷</div>
+          <h4>Point &amp; Ask</h4>
+          <p>Worker points their phone camera at a machine, a part, or an error code and asks "what do I do?" — ForgeAI answers from your own manuals.</p>
+        </div>
+        <div class="pwa-detail">
+          <div class="pwa-detail-icon">🎙️</div>
+          <h4>Speak Your Question</h4>
+          <p>Tap the mic, ask out loud. ForgeAI converts speech to text and delivers an answer in seconds. Gloves on, hands busy — no problem.</p>
+        </div>
+        <div class="pwa-detail">
+          <div class="pwa-detail-icon">📶</div>
+          <h4>Built for the Shop Floor</h4>
+          <p>Spotty Wi-Fi won't crash the app. ForgeAI keeps working gracefully even when the connection drops, and picks back up automatically.</p>
+        </div>
+      </div>
+
+      <div style="margin-top: 20px; background: #f8fafc; border: 1px solid var(--border); border-radius: 10px; padding: 16px 20px;">
+        <div style="font-size: 8.5pt; font-weight: 700; color: var(--black); margin-bottom: 10px;">Path to Smart Glasses</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 0; font-size: 8pt; color: var(--muted);">
+          <div style="padding-right: 16px; border-right: 1px solid var(--border);">
+            <div style="color: var(--green); font-weight: 700; margin-bottom: 3px;">✓ Phase 1 — Live</div>
+            Mobile app on iPhones &amp; Android phones
+          </div>
+          <div style="padding: 0 16px; border-right: 1px solid var(--border);">
+            <div style="color: var(--amber); font-weight: 700; margin-bottom: 3px;">→ Phase 2 — Next</div>
+            Pilot with 2–3 real customers, gather feedback
+          </div>
+          <div style="padding: 0 16px; border-right: 1px solid var(--border);">
+            <div style="color: var(--accent); font-weight: 700; margin-bottom: 3px;">Phase 3</div>
+            Dedicated app for industrial smart glasses (RealWear, Vuzix)
+          </div>
+          <div style="padding-left: 16px;">
+            <div style="color: var(--muted); font-weight: 700; margin-bottom: 3px;">Phase 4</div>
+            Live camera feed, full offline mode, hands-free voice commands
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 5: MARKET ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">05 / 06</div>
+      </div>
+
+      <div class="section-label">Market &amp; Differentiation</div>
+      <h2>Built for the people who build things.</h2>
+      <p class="section-intro">
+        ForgeAI targets small and mid-size manufacturers and industrial operations —
+        the businesses that can't afford six-figure enterprise software and six-month rollouts.
+      </p>
+
+      <div class="two-col" style="margin-bottom: 20px;">
+        <div class="box">
+          <h3>Who this is for</h3>
+          <ul class="check-list">
+            <li>Small &amp; mid-size manufacturers (50–500 employees)</li>
+            <li>Maintenance &amp; repair teams</li>
+            <li>Food &amp; beverage processing plants</li>
+            <li>Logistics and warehouse operations</li>
+            <li>Any business with procedures, compliance requirements, and high staff turnover</li>
+          </ul>
+        </div>
+        <div class="box">
+          <h3>Why ForgeAI wins</h3>
+          <ul class="check-list">
+            <li>Answers come only from <em>your</em> documents — not random internet results</li>
+            <li>Expert Capture preserves a retiring worker's knowledge in hours, not months</li>
+            <li>Runs on phones your workers already own — zero hardware spend</li>
+            <li>Up and running the same day — no IT project, no training programme</li>
+            <li>The AI is always accurate to your content, not guessing</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="box">
+          <h3>What's built &amp; what's next</h3>
+          <div class="roadmap-item">
+            <div class="roadmap-badge badge-done">Done</div>
+            <div class="roadmap-text">
+              <h4>AI Knowledge Base + Expert Capture</h4>
+              <p>Upload documents and videos — workers get instant, sourced answers via chat</p>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-badge badge-done">Done</div>
+            <div class="roadmap-text">
+              <h4>Mobile App (iPhone-first)</h4>
+              <p>Point-and-ask camera, speak-your-question voice, home screen install</p>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-badge badge-next">Next</div>
+            <div class="roadmap-text">
+              <h4>First paying customers</h4>
+              <p>Onboard 2–3 pilot businesses, gather real-world feedback</p>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-badge badge-future">Future</div>
+            <div class="roadmap-text">
+              <h4>Industrial Smart Glasses</h4>
+              <p>Dedicated app for RealWear &amp; Vuzix — fully hands-free on the floor</p>
+            </div>
+          </div>
+        </div>
+        <div class="box">
+          <h3>How access &amp; security work</h3>
+          <ul class="check-list">
+            <li><strong>Managers</strong> upload documents, invite workers, and review Expert Captures</li>
+            <li><strong>Workers</strong> only see the chat — a clean, focused mobile interface</li>
+            <li>Each company's data is completely separate from every other</li>
+            <li>Workers join via a simple email invite — no passwords to remember</li>
+            <li>Secure login with role-based access built in from day one</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 6: CTA ══ -->
+  <div class="page">
+    <div class="cta-page">
+      <div class="cta-label">Ready to see it live?</div>
+      <div class="cta-heading">Put your SOPs to<br><span>work.</span></div>
+      <div class="cta-sub">
+        ForgeAI is live and ready. Upload your documents and have workers asking questions today —
+        no IT team, no lengthy rollout, no new hardware.
+      </div>
+      <div class="cta-cards">
+        <div class="cta-card">
+          <div class="cta-card-icon">⚡</div>
+          <h4>Minutes to set up</h4>
+          <p>Upload docs, invite workers — live in under an hour</p>
+        </div>
+        <div class="cta-card">
+          <div class="cta-card-icon">📱</div>
+          <h4>Any device</h4>
+          <p>Phones workers already have. No hardware spend.</p>
+        </div>
+        <div class="cta-card">
+          <div class="cta-card-icon">🔒</div>
+          <h4>Your data only</h4>
+          <p>Answers come from your docs. Nothing else.</p>
+        </div>
+      </div>
+      <div class="cta-footer">ForgeAI · forgeai-chi.vercel.app · Confidential 2026</div>
+    </div>
+  </div>
+
+</body>
+</html>

@@ -1,0 +1,1208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ForgeAI — YC Application: AI Guidance for Physical Work</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+    :root {
+      --black: #0a0a0a;
+      --accent: #4f46e5;
+      --accent-light: #818cf8;
+      --accent-pale: #eef2ff;
+      --green: #10b981;
+      --green-pale: #d1fae5;
+      --amber: #f59e0b;
+      --amber-pale: #fef3c7;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --border: #e5e7eb;
+      --light-bg: #f8fafc;
+      --white: #ffffff;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text);
+      background: var(--white);
+      font-size: 10pt;
+      line-height: 1.6;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 0;
+      margin: 0 auto;
+      page-break-after: always;
+      position: relative;
+      overflow: hidden;
+    }
+    .page:last-child { page-break-after: avoid; }
+
+    /* ══ COVER — light ══ */
+    .cover {
+      background: var(--white);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 60px 64px;
+      min-height: 297mm;
+      position: relative;
+    }
+
+    .cover-badge {
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      background: var(--accent-pale);
+      border: 1px solid rgba(79,70,229,0.2);
+      border-radius: 20px;
+      padding: 5px 14px;
+      display: inline-block;
+      margin-bottom: 28px;
+    }
+    .cover-yc-badge {
+      font-size: 8pt;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: #c2410c;
+      background: #fff7ed;
+      border: 1px solid rgba(194,65,12,0.2);
+      border-radius: 20px;
+      padding: 5px 14px;
+      display: inline-block;
+      margin-bottom: 28px;
+      margin-left: 10px;
+    }
+
+    .cover-logo {
+      font-size: 52pt;
+      font-weight: 900;
+      color: var(--black);
+      letter-spacing: -0.03em;
+      line-height: 1;
+      margin-bottom: 12px;
+    }
+    .cover-logo span { color: var(--accent); }
+
+    .cover-tagline {
+      font-size: 17pt;
+      font-weight: 300;
+      color: var(--muted);
+      margin-bottom: 36px;
+      max-width: 480px;
+      line-height: 1.4;
+    }
+
+    .cover-divider {
+      width: 48px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), var(--green));
+      border-radius: 2px;
+      margin-bottom: 36px;
+    }
+
+    .cover-summary {
+      font-size: 10.5pt;
+      color: var(--muted);
+      max-width: 520px;
+      line-height: 1.7;
+    }
+
+    .cover-footer {
+      position: absolute;
+      bottom: 48px;
+      left: 64px;
+      right: 64px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-top: 1px solid var(--border);
+      padding-top: 20px;
+    }
+    .cover-footer-text {
+      font-size: 8pt;
+      color: var(--muted);
+      letter-spacing: 0.05em;
+    }
+    .cover-footer-url {
+      font-size: 8pt;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    /* ══ INNER PAGES ══ */
+    .inner {
+      padding: 48px 64px;
+      min-height: 297mm;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 32px;
+      padding-bottom: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+    .page-header-logo {
+      font-size: 12pt;
+      font-weight: 800;
+      color: var(--black);
+      letter-spacing: -0.02em;
+    }
+    .page-header-logo span { color: var(--accent); }
+    .page-number {
+      font-size: 8pt;
+      color: var(--muted);
+    }
+
+    h2 {
+      font-size: 22pt;
+      font-weight: 800;
+      color: var(--black);
+      letter-spacing: -0.03em;
+      line-height: 1.15;
+      margin-bottom: 6px;
+    }
+    .section-label {
+      font-size: 7.5pt;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+    .section-intro {
+      font-size: 10.5pt;
+      color: var(--muted);
+      margin-bottom: 24px;
+      max-width: 560px;
+      line-height: 1.6;
+    }
+
+    /* ── Quote block ── */
+    .quote-block {
+      background: var(--light-bg);
+      border-left: 3px solid var(--accent);
+      border-radius: 0 10px 10px 0;
+      padding: 20px 24px;
+      margin-bottom: 24px;
+    }
+    .quote-block p {
+      font-size: 10pt;
+      color: var(--text);
+      line-height: 1.6;
+      font-style: italic;
+    }
+    .quote-block .attribution {
+      font-style: normal;
+      font-size: 8.5pt;
+      color: var(--muted);
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    /* ── Why Now cards ── */
+    .why-now-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      margin-bottom: 20px;
+    }
+    .why-now-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 20px;
+    }
+    .why-now-card .num {
+      font-size: 26pt;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: -0.04em;
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .why-now-card h4 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 6px;
+    }
+    .why-now-card p {
+      font-size: 8.5pt;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Stat row ── */
+    .stat-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .stat-box {
+      background: var(--accent-pale);
+      border-radius: 10px;
+      padding: 16px 20px;
+      text-align: center;
+    }
+    .stat-number {
+      font-size: 22pt;
+      font-weight: 900;
+      color: var(--accent);
+      letter-spacing: -0.03em;
+      line-height: 1;
+    }
+    .stat-label {
+      font-size: 8pt;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 500;
+    }
+
+    /* ── Hero box — light ── */
+    .hero-box {
+      background: var(--accent-pale);
+      border: 1px solid rgba(79,70,229,0.15);
+      border-radius: 14px;
+      padding: 28px 32px;
+      margin-bottom: 18px;
+    }
+    .hero-box h3 {
+      font-size: 14pt;
+      font-weight: 800;
+      color: var(--black);
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+    .hero-box p {
+      font-size: 9.5pt;
+      color: var(--muted);
+      line-height: 1.6;
+      max-width: 480px;
+    }
+
+    /* ── Flow diagram — light ── */
+    .flow-diagram {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 16px;
+      flex-wrap: wrap;
+    }
+    .flow-step {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 5px 11px;
+      font-size: 7.5pt;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .flow-arrow {
+      color: var(--accent);
+      font-size: 10pt;
+    }
+
+    /* ── Feature grid ── */
+    .feature-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    .feature-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 12px;
+    }
+    .feature-card {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px 18px;
+    }
+    .feature-card-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 7px;
+    }
+    .feature-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14pt;
+      flex-shrink: 0;
+    }
+    .icon-blue { background: var(--accent-pale); }
+    .icon-green { background: var(--green-pale); }
+    .icon-amber { background: var(--amber-pale); }
+    .icon-dark { background: #f3f4f6; }
+
+    .feature-card h4 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--black);
+    }
+    .feature-card p {
+      font-size: 8.5pt;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Pipeline steps ── */
+    .pipeline-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+    .pipeline-step:last-child { margin-bottom: 0; }
+    .pipeline-num {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: white;
+      font-size: 9pt;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .pipeline-body h4 {
+      font-size: 9.5pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 2px;
+    }
+    .pipeline-body p {
+      font-size: 8.5pt;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* ── Voice commands table ── */
+    .voice-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 8.5pt;
+      margin-top: 12px;
+    }
+    .voice-table th {
+      text-align: left;
+      font-weight: 700;
+      color: var(--black);
+      padding: 8px 12px;
+      background: var(--light-bg);
+      border-bottom: 1px solid var(--border);
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .voice-table td {
+      padding: 7px 12px;
+      border-bottom: 1px solid #f3f4f6;
+      color: var(--text);
+    }
+    .voice-table td:first-child {
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .voice-table td:last-child {
+      color: var(--muted);
+    }
+
+    /* ── Two column ── */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    .box {
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px 20px;
+    }
+    .box h3 {
+      font-size: 10.5pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .check-list { list-style: none; }
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 8.5pt;
+      color: var(--text);
+      margin-bottom: 8px;
+      line-height: 1.4;
+    }
+    .check-list li::before {
+      content: '✓';
+      color: var(--green);
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    /* ── Roadmap ── */
+    .roadmap-item {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 11px;
+    }
+    .roadmap-item:last-child { margin-bottom: 0; }
+    .roadmap-badge {
+      flex-shrink: 0;
+      border-radius: 6px;
+      padding: 3px 9px;
+      font-size: 7.5pt;
+      font-weight: 700;
+    }
+    .badge-done { background: var(--green-pale); color: #059669; }
+    .badge-next { background: var(--amber-pale); color: #d97706; }
+    .badge-future { background: var(--accent-pale); color: var(--accent); }
+    .roadmap-text h4 {
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 2px;
+    }
+    .roadmap-text p {
+      font-size: 8pt;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* ── Tech strip ── */
+    .tech-strip {
+      background: var(--light-bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+      margin-top: auto;
+    }
+    .tech-strip-label {
+      font-size: 7.5pt;
+      font-weight: 700;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-right: 4px;
+    }
+    .tech-tag {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 5px;
+      padding: 2px 8px;
+      font-size: 7.5pt;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    /* ── CTA page — light ── */
+    .cta-page {
+      background: var(--light-bg);
+      min-height: 297mm;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-label {
+      font-size: 8pt;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+    }
+    .cta-heading {
+      font-size: 30pt;
+      font-weight: 900;
+      color: var(--black);
+      letter-spacing: -0.04em;
+      line-height: 1.1;
+      max-width: 500px;
+      margin: 0 auto 16px;
+    }
+    .cta-heading span { color: var(--accent); }
+    .cta-sub {
+      font-size: 10.5pt;
+      color: var(--muted);
+      max-width: 440px;
+      margin: 0 auto 36px;
+      line-height: 1.6;
+    }
+    .cta-cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px;
+      max-width: 560px;
+      width: 100%;
+      margin-bottom: 40px;
+    }
+    .cta-card {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px 16px;
+    }
+    .cta-card-icon { font-size: 18pt; margin-bottom: 8px; }
+    .cta-card h4 {
+      font-size: 9pt;
+      font-weight: 700;
+      color: var(--black);
+      margin-bottom: 4px;
+    }
+    .cta-card p {
+      font-size: 8pt;
+      color: var(--muted);
+    }
+    .cta-footer {
+      position: absolute;
+      bottom: 40px;
+      font-size: 8.5pt;
+      color: var(--muted);
+    }
+
+    /* ── Phase strip — light ── */
+    .phase-strip {
+      background: var(--accent-pale);
+      border: 1px solid rgba(79,70,229,0.15);
+      border-radius: 14px;
+      padding: 24px 28px;
+      margin-bottom: 20px;
+    }
+    .phase-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 0;
+      font-size: 8.5pt;
+    }
+    .phase-col {
+      padding: 0 18px;
+      border-right: 1px solid rgba(79,70,229,0.15);
+    }
+    .phase-col:first-child { padding-left: 0; }
+    .phase-col:last-child { border-right: none; padding-right: 0; }
+    .phase-label {
+      font-weight: 700;
+      margin-bottom: 6px;
+      font-size: 9pt;
+    }
+    .phase-title {
+      font-weight: 600;
+      color: var(--black);
+      margin-bottom: 4px;
+    }
+    .phase-desc {
+      color: var(--muted);
+      font-size: 8pt;
+      line-height: 1.5;
+    }
+
+    @media print {
+      body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      .page { page-break-after: always; }
+      .page:last-child { page-break-after: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ══ PAGE 1: COVER ══ -->
+  <div class="page">
+    <div class="cover">
+      <div>
+        <span class="cover-badge">YC Application · 2026</span>
+        <span class="cover-yc-badge">AI Guidance for Physical Work</span>
+      </div>
+      <div class="cover-logo">Forge<span>AI</span></div>
+      <div class="cover-tagline">Expert walkthrough videos become real-time voice-guided coaching for any worker.</div>
+      <div class="cover-divider"></div>
+      <div class="cover-summary">
+        A senior technician records themselves doing a procedure once. ForgeAI watches the video,
+        extracts step-by-step instructions, safety warnings, and Q&amp;A — then coaches any worker
+        through it in real time with voice guidance. Phone today, smart glasses tomorrow.
+      </div>
+      <div class="cover-footer">
+        <div class="cover-footer-text">CONFIDENTIAL · ForgeAI · 2026</div>
+        <div class="cover-footer-url">forgeai-chi.vercel.app</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 2: THE OPPORTUNITY ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">02 / 08</div>
+      </div>
+
+      <div class="section-label">The Opportunity</div>
+      <h2>AI can't act in the world yet.<br>But it can guide the human who does.</h2>
+      <p class="section-intro">
+        For physical work — field services, manufacturing, healthcare — AI can now see, reason, and coach in real time. This changes everything.
+      </p>
+
+      <div class="quote-block">
+        <p>"Imagine wearing a small camera while an AI sees what you see and talks you through the job: 'turn off that valve', 'use the ⅜ inch wrench', 'that part looks worn, replace it'. Instead of needing months of training, workers become effective immediately."</p>
+        <div class="attribution">— David Lieb, YC Partner</div>
+      </div>
+
+      <div class="why-now-grid">
+        <div class="why-now-card">
+          <div class="num">1</div>
+          <h4>Multimodal AI works</h4>
+          <p>Gemini 2.0 Flash watches a 45-minute expert video and extracts structured procedures with exact specs — torque values, temperatures, part numbers. This wasn't possible 18 months ago.</p>
+        </div>
+        <div class="why-now-card">
+          <div class="num">2</div>
+          <h4>Hardware is everywhere</h4>
+          <p>Every worker has a phone and earbuds. Our PWA installs in one tap. When smart glasses arrive, we're the software layer that powers them.</p>
+        </div>
+        <div class="why-now-card">
+          <div class="num">3</div>
+          <h4>Labor crisis is urgent</h4>
+          <p>2.1M manufacturing jobs unfilled by 2030. Average electrician age: 55. Companies can't transfer decades of knowledge fast enough with traditional training.</p>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-number">2.1M</div>
+          <div class="stat-label">manufacturing jobs unfilled by 2030<br><em>(Deloitte)</em></div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">$47B</div>
+          <div class="stat-label">lost annually to inefficient knowledge transfer</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">23%</div>
+          <div class="stat-label">of work time spent searching for information<br><em>(IDC)</em></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 3: WHAT WE'VE BUILT ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">03 / 08</div>
+      </div>
+
+      <div class="section-label">What We've Built</div>
+      <h2>From expert video to voice-guided<br>coaching — fully shipped.</h2>
+      <p class="section-intro">
+        Not a prototype. Not a demo. Every feature below is live and working today.
+      </p>
+
+      <div class="hero-box">
+        <h3>Expert Capture → Structured Knowledge → Real-Time Guidance</h3>
+        <p>
+          A senior technician records a walkthrough video once. Our AI pipeline watches the video, synthesizes it into
+          structured procedures, and makes it available as voice-guided coaching — all within minutes.
+        </p>
+        <div class="flow-diagram">
+          <div class="flow-step">Expert records video</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">Gemini 2.0 Flash analyzes</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">Claude synthesizes procedures</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">Embeddings + pgvector</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">Worker gets voice guidance</div>
+        </div>
+      </div>
+
+      <div class="feature-grid">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-green">🎥</div>
+            <h4>Expert Video Capture</h4>
+          </div>
+          <p>Upload a walkthrough video (MP4, WebM, MOV — up to 500MB). AI extracts procedures, equipment lists, safety warnings, and 8-20 Q&amp;A pairs automatically.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-blue">🔊</div>
+            <h4>Voice-Guided Procedures</h4>
+          </div>
+          <p>Workers hear each step read aloud with safety warnings. Hands-free voice commands: "next", "repeat", "pause". No touching the phone.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-amber">🎤</div>
+            <h4>Contextual Voice Q&amp;A</h4>
+          </div>
+          <p>Worker asks "what if the voltage reads 11?" mid-step. Gets an answer grounded in the expert's knowledge, read aloud. Full conversational loop.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-dark">📷</div>
+            <h4>Camera + RAG Chat</h4>
+          </div>
+          <p>Point phone camera at a machine or part, ask a question. GPT-4o Vision + RAG searches your org's documents. Source-attributed answers.</p>
+        </div>
+      </div>
+
+      <div class="tech-strip" style="margin-top: 16px;">
+        <span class="tech-strip-label">Tech Stack</span>
+        <span class="tech-tag">Next.js 16</span>
+        <span class="tech-tag">React 19</span>
+        <span class="tech-tag">Gemini 2.0 Flash</span>
+        <span class="tech-tag">Claude Sonnet 4.5</span>
+        <span class="tech-tag">GPT-4o</span>
+        <span class="tech-tag">Whisper</span>
+        <span class="tech-tag">pgvector</span>
+        <span class="tech-tag">Prisma 7</span>
+        <span class="tech-tag">Serwist PWA</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 4: HOW THE PIPELINE WORKS ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">04 / 08</div>
+      </div>
+
+      <div class="section-label">Expert Capture Pipeline</div>
+      <h2>One video in, structured<br>knowledge out.</h2>
+      <p class="section-intro">
+        The expert capture pipeline turns a raw walkthrough video into training-quality documentation in 3-8 minutes — work that previously took weeks of technical writing.
+      </p>
+
+      <div class="two-col" style="margin-bottom: 20px;">
+        <div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">1</div>
+            <div class="pipeline-body">
+              <h4>Video Upload</h4>
+              <p>Expert records a walkthrough showing the procedure — any camera, any format (MP4, WebM, MOV, MPEG). Up to 500MB. Uploaded to Vercel Blob.</p>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">2</div>
+            <div class="pipeline-body">
+              <h4>Visual + Audio Analysis</h4>
+              <p>Gemini 2.0 Flash watches every frame and listens to the narration. Extracts scenes, procedures, equipment, safety hazards, and timestamps.</p>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">3</div>
+            <div class="pipeline-body">
+              <h4>Knowledge Synthesis</h4>
+              <p>Claude Sonnet 4.5 synthesizes the raw analysis into a clean ExpertKnowledgeDocument: step-by-step procedures with exact specs (torque values, temperatures, pressures, part numbers).</p>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">4</div>
+            <div class="pipeline-body">
+              <h4>Semantic Indexing</h4>
+              <p>Pre-chunked by procedure step, Q&amp;A pair, and safety note. Embedded with text-embedding-3-small (1536-dim vectors). Stored in PostgreSQL + pgvector.</p>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">5</div>
+            <div class="pipeline-body">
+              <h4>Instantly Available</h4>
+              <p>Procedure appears in the Guide Library. Workers can start following it immediately with voice guidance, or search it via RAG chat.</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="box" style="margin-bottom: 14px;">
+            <h3>What the AI extracts</h3>
+            <ul class="check-list">
+              <li><strong>Procedures</strong> — numbered steps with titles, descriptions, safety levels, timestamps</li>
+              <li><strong>Equipment</strong> — tools, machines, parts with part numbers and specs</li>
+              <li><strong>Safety notes</strong> — PPE, hazards, procedures, environmental warnings</li>
+              <li><strong>Q&amp;A pairs</strong> — 8-20 realistic questions covering how-to, safety, troubleshooting, common mistakes</li>
+              <li><strong>Full transcript</strong> — complete audio transcription for searchability</li>
+              <li><strong>Executive summary</strong> — 2-3 paragraph overview of the procedure</li>
+            </ul>
+          </div>
+          <div class="box">
+            <h3>Safety-aware by design</h3>
+            <ul class="check-list">
+              <li><strong>CRITICAL</strong> — red badge, TTS prefixes "Warning. Critical safety step."</li>
+              <li><strong>WARNING</strong> — yellow badge, TTS prefixes "Caution."</li>
+              <li>Auto-escalated for electrical, hydraulic, pneumatic, rotating, and chemical hazards</li>
+              <li>Warnings displayed in highlighted callout boxes on each step</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 5: GUIDED PROCEDURE UX ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">05 / 08</div>
+      </div>
+
+      <div class="section-label">Step-by-Step Guidance</div>
+      <h2>The worker experience:<br>fully hands-free.</h2>
+      <p class="section-intro">
+        Worker opens a guide on their phone. Each step is read aloud. They say "next" when done.
+        If confused, they ask a question and hear the answer. No hands needed.
+      </p>
+
+      <div class="two-col" style="margin-bottom: 18px;">
+        <div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">1</div>
+            <div class="pipeline-body">
+              <h4>Browse &amp; start a guide</h4>
+              <p>Worker opens the Guide Library, sees available procedures with step counts, safety badges, and expert names. Taps "Start Guide" or "Resume" to continue from where they left off.</p>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">2</div>
+            <div class="pipeline-body">
+              <h4>Step-by-step with auto-play audio</h4>
+              <p>Each step shows a progress bar, title, description, safety level, and warnings. The step description is automatically read aloud via TTS. Safety steps are prefixed with voice warnings.</p>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">3</div>
+            <div class="pipeline-body">
+              <h4>Voice commands — no hands needed</h4>
+              <p>Worker says "next" when done, "repeat" to hear it again, "pause" to stop audio, "go back" to revisit. Mic pauses during TTS to prevent feedback, then auto-resumes.</p>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">4</div>
+            <div class="pipeline-body">
+              <h4>Ask anything mid-step</h4>
+              <p>Any spoken phrase that isn't a command becomes a question. It goes to the contextual AI chat, gets a RAG-powered answer specific to this step, and the response is read aloud automatically.</p>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num">5</div>
+            <div class="pipeline-body">
+              <h4>Complete &amp; track progress</h4>
+              <p>On the last step, worker says "done" or taps "Complete". Session is logged. Managers can see procedure completion status. Workers can resume any procedure where they left off.</p>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <div class="box" style="margin-bottom: 14px;">
+            <h3>Voice commands</h3>
+            <table class="voice-table">
+              <thead>
+                <tr><th>Action</th><th>Say any of these</th></tr>
+              </thead>
+              <tbody>
+                <tr><td>Next step</td><td>next, continue, done, forward, skip</td></tr>
+                <tr><td>Previous</td><td>back, previous, go back</td></tr>
+                <tr><td>Read step</td><td>read, repeat, again, say again</td></tr>
+                <tr><td>Pause audio</td><td>pause, stop, mute, quiet</td></tr>
+                <tr><td>Resume</td><td>play, resume, start, speak</td></tr>
+                <tr><td>Ask question</td><td>Anything else → goes to AI chat</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="box">
+            <h3>The hands-free loop</h3>
+            <div style="background: var(--light-bg); border-radius: 8px; padding: 14px; font-size: 8.5pt; color: var(--muted); line-height: 2;">
+              <span style="color: var(--green); font-weight: 700;">1.</span> Step is read aloud<br>
+              <span style="color: var(--green); font-weight: 700;">2.</span> Worker performs the step<br>
+              <span style="color: var(--green); font-weight: 700;">3.</span> Says "next" → advances<br>
+              <span style="color: var(--accent); font-weight: 700;">OR</span> Asks a question → AI answers aloud<br>
+              <span style="color: var(--green); font-weight: 700;">4.</span> Mic auto-resumes after TTS<br>
+              <span style="color: var(--green); font-weight: 700;">5.</span> Repeat until complete
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 6: PATH TO GLASSES ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">06 / 08</div>
+      </div>
+
+      <div class="section-label">Platform Roadmap</div>
+      <h2>Phone today. Smart glasses<br>tomorrow. Same backend.</h2>
+      <p class="section-intro">
+        Our architecture is hardware-agnostic. Every expert video captured today becomes AR-ready content tomorrow without any rework.
+      </p>
+
+      <div class="phase-strip">
+        <div class="phase-grid">
+          <div class="phase-col">
+            <div class="phase-label" style="color: var(--green);">✓ Phase 1 — Live</div>
+            <div class="phase-title">Phone + earbuds</div>
+            <div class="phase-desc">Worker launches procedure, listens to steps, uses voice commands. Camera capture for visual queries.</div>
+          </div>
+          <div class="phase-col">
+            <div class="phase-label" style="color: var(--amber);">→ Phase 2 — Next</div>
+            <div class="phase-title">Design partners</div>
+            <div class="phase-desc">Onboard 2-3 field service companies. Refine voice UX with real workers on real jobs.</div>
+          </div>
+          <div class="phase-col">
+            <div class="phase-label" style="color: var(--accent);">Phase 3</div>
+            <div class="phase-title">Smart glasses</div>
+            <div class="phase-desc">Same backend, same procedures — now overlaid on worker's field of view via Meta, XREAL, or Vuzix.</div>
+          </div>
+          <div class="phase-col">
+            <div class="phase-label" style="color: var(--muted);">Phase 4</div>
+            <div class="phase-title">Proactive AI</div>
+            <div class="phase-desc">Continuous visual monitoring. AI detects what step the worker is on and warns about mistakes before they happen.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="two-col" style="margin-bottom: 16px;">
+        <div class="box">
+          <h3>Our approach</h3>
+          <ul class="check-list">
+            <li><strong>Build the system, sell to companies</strong> with existing workforces — field services, manufacturing, facilities</li>
+            <li><strong>Vertical wedge:</strong> start with companies already recording expert videos but storing them in SharePoint where nobody watches them</li>
+            <li><strong>Hardware-agnostic:</strong> phone is the wedge, glasses are the endgame — same content pipeline serves both</li>
+            <li><strong>Compound moat:</strong> every expert video captured makes the knowledge base more valuable over time</li>
+          </ul>
+        </div>
+        <div class="box">
+          <h3>Market sizing</h3>
+          <ul class="check-list">
+            <li><strong>12.8M</strong> manufacturing workers in the US alone</li>
+            <li><strong>$5.2B</strong> field services market by 2028</li>
+            <li><strong>$28.4B</strong> connected worker platform market by 2032 (Fortune Business Insights)</li>
+            <li>Even <strong>0.1%</strong> of frontline workers at $50/worker/month = <strong>$77M ARR</strong></li>
+            <li>Large enterprise incumbents (PTC Vuforia, Honeywell Forge) cost $500K+ — <strong>SMBs are massively underserved</strong></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="stat-row">
+        <div class="stat-box">
+          <div class="stat-number">$25-50</div>
+          <div class="stat-label">per worker / month</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">Usage</div>
+          <div class="stat-label">per video minute processed for expert capture</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-number">Free</div>
+          <div class="stat-label">tier: 3 workers, 5 docs, 2 expert captures</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 7: WHAT'S SHIPPED ══ -->
+  <div class="page">
+    <div class="inner">
+      <div class="page-header">
+        <div class="page-header-logo">Forge<span>AI</span></div>
+        <div class="page-number">07 / 08</div>
+      </div>
+
+      <div class="section-label">Shipped Features</div>
+      <h2>Everything is live. Not a mockup.</h2>
+      <p class="section-intro">
+        We've built and shipped the complete pipeline — from video upload to voice-guided procedures with contextual AI assistance.
+      </p>
+
+      <div class="feature-grid-3" style="margin-bottom: 16px;">
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-green">🎥</div>
+            <h4>Expert Video Capture</h4>
+          </div>
+          <p>Gemini 2.0 Flash + Claude Sonnet 4.5 pipeline. Extracts procedures, safety, equipment, Q&amp;A.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-blue">📋</div>
+            <h4>Guide Library</h4>
+          </div>
+          <p>Searchable grid of available procedures. Step count, safety badges, resume capability.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-amber">🔊</div>
+            <h4>Voice-Guided Steps</h4>
+          </div>
+          <p>Auto-play TTS with safety prefixes. Toggle on/off. Persisted preference.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-dark">🎙️</div>
+            <h4>Voice Commands</h4>
+          </div>
+          <p>20+ command synonyms. Two-tier matching (short phrases vs. multi-word). Toast feedback.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-blue">💬</div>
+            <h4>Contextual Q&amp;A</h4>
+          </div>
+          <p>Step-aware RAG chat. Voice questions, streamed responses, read aloud automatically.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-green">📷</div>
+            <h4>Camera + Vision</h4>
+          </div>
+          <p>Point phone at machine, ask question. GPT-4o Vision analyzes with RAG context.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-amber">📄</div>
+            <h4>Document RAG</h4>
+          </div>
+          <p>Upload PDFs, Word docs, images. Semantic search with source attribution on every answer.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-dark">📱</div>
+            <h4>PWA Mobile App</h4>
+          </div>
+          <p>Installable on iOS &amp; Android. Offline fallback. iOS-safe camera and audio capture.</p>
+        </div>
+        <div class="feature-card">
+          <div class="feature-card-header">
+            <div class="feature-icon icon-blue">🔐</div>
+            <h4>Multi-Tenant Auth</h4>
+          </div>
+          <p>Role-based access (admin/worker). Org-scoped data isolation. Email invite system.</p>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="box">
+          <h3>What's built &amp; what's next</h3>
+          <div class="roadmap-item">
+            <div class="roadmap-badge badge-done">Done</div>
+            <div class="roadmap-text">
+              <h4>Expert Capture + Knowledge Base</h4>
+              <p>Video → structured procedures → RAG-searchable knowledge</p>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-badge badge-done">Done</div>
+            <div class="roadmap-text">
+              <h4>Voice-Guided Procedures</h4>
+              <p>Step-by-step audio guidance with hands-free commands + Q&amp;A</p>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-badge badge-done">Done</div>
+            <div class="roadmap-text">
+              <h4>Mobile-First PWA</h4>
+              <p>Camera, voice, offline fallback — works on any phone</p>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-badge badge-next">Next</div>
+            <div class="roadmap-text">
+              <h4>Design Partners</h4>
+              <p>2-3 field service companies testing with real workers</p>
+            </div>
+          </div>
+          <div class="roadmap-item">
+            <div class="roadmap-badge badge-future">Future</div>
+            <div class="roadmap-text">
+              <h4>Smart Glasses Integration</h4>
+              <p>AR overlay with same backend — Meta, XREAL, Vuzix</p>
+            </div>
+          </div>
+        </div>
+        <div class="box">
+          <h3>Session persistence</h3>
+          <ul class="check-list">
+            <li>Workers can <strong>resume any procedure</strong> exactly where they left off</li>
+            <li>GuidanceSession tracks current step, total steps, status (in-progress / completed / abandoned)</li>
+            <li>Auto-play preference persisted in localStorage</li>
+            <li>Chat history per step — switch steps and conversation context follows</li>
+            <li>Completion status tracked for reporting</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ PAGE 8: CTA ══ -->
+  <div class="page">
+    <div class="cta-page">
+      <div class="cta-label">YC Application · AI Guidance for Physical Work</div>
+      <div class="cta-heading">The expert records it once.<br>Every worker <span>knows it forever.</span></div>
+      <div class="cta-sub">
+        ForgeAI turns expert walkthrough videos into real-time, voice-guided coaching.
+        Phone today, smart glasses tomorrow. Fully built, fully shipped.
+      </div>
+      <div class="cta-cards">
+        <div class="cta-card">
+          <div class="cta-card-icon">🎥</div>
+          <h4>Expert captures</h4>
+          <p>One video becomes structured procedures, safety notes, and Q&amp;A — automatically</p>
+        </div>
+        <div class="cta-card">
+          <div class="cta-card-icon">🎙️</div>
+          <h4>Hands-free guidance</h4>
+          <p>Voice commands + contextual Q&amp;A — workers never touch their phone</p>
+        </div>
+        <div class="cta-card">
+          <div class="cta-card-icon">🥽</div>
+          <h4>Glasses-ready</h4>
+          <p>Same backend, same content — ready for AR overlay when glasses arrive</p>
+        </div>
+      </div>
+      <div style="font-size: 9pt; color: var(--muted);">
+        <span style="color: var(--accent); font-weight: 700;">Live demo:</span> forgeai-chi.vercel.app
+      </div>
+      <div class="cta-footer">ForgeAI · Confidential 2026</div>
+    </div>
+  </div>
+
+</body>
+</html>

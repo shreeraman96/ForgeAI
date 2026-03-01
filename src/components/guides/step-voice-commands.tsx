@@ -49,7 +49,7 @@ const COMMAND_LABELS: Record<VoiceCommand, string> = {
  * Longer utterances only match specific multi-word phrases to avoid
  * accidentally interpreting questions as commands.
  */
-function matchVoiceCommand(transcript: string): VoiceCommand | null {
+export function matchVoiceCommand(transcript: string): VoiceCommand | null {
   const words = transcript.split(/\s+/);
   const isShort = words.length <= 3;
 

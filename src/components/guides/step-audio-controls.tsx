@@ -13,7 +13,7 @@ interface StepAudioControlsProps {
   onPlayStateChange: (playing: boolean) => void;
 }
 
-function buildSpeechText(
+export function buildSpeechText(
   text: string,
   safetyLevel?: string,
   warnings?: string[]

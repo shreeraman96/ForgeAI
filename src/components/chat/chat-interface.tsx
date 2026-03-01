@@ -1,10 +1,12 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
 import { SourceCitation } from "./source-citation";
+import { VoiceConversationOverlay } from "./voice-conversation-overlay";
 import { MessageSquare } from "lucide-react";
+import type { TtsMode } from "@/hooks/use-voice-conversation";
 
 interface Message {
   id: string;
@@ -17,6 +19,11 @@ export function ChatInterface() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [voiceModeActive, setVoiceModeActive] = useState(false);
+  const [ttsMode, setTtsMode] = useState<TtsMode>(() => {
+    if (typeof window === "undefined") return "browser";
+    return (localStorage.getItem("forgeai-tts-mode") as TtsMode) || "browser";
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -28,7 +35,7 @@ export function ChatInterface() {
   async function handleSend(
     message: string,
     image?: { base64: string; mimeType: string }
-  ) {
+  ): Promise<string> {
     const userMsg: Message = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -43,6 +50,8 @@ export function ChatInterface() {
 
     setMessages((prev) => [...prev, userMsg, assistantMsg]);
     setIsStreaming(true);
+
+    let fullText = "";
 
     try {
       const response = await fetch("/api/chat", {
@@ -85,6 +94,7 @@ export function ChatInterface() {
           const { done, value } = await reader.read();
           if (done) break;
           const text = decoder.decode(value, { stream: true });
+          fullText += text;
           setMessages((prev) =>
             prev.map((m) =>
               m.id === assistantMsg.id
@@ -103,20 +113,30 @@ export function ChatInterface() {
       );
     } catch (error) {
       console.error("Chat error:", error);
+      fullText = "Sorry, I encountered an error. Please try again.";
       setMessages((prev) =>
         prev.map((m) =>
           m.id === assistantMsg.id
-            ? {
-                ...m,
-                content:
-                  "Sorry, I encountered an error. Please try again.",
-              }
+            ? { ...m, content: fullText }
             : m
         )
       );
     } finally {
       setIsStreaming(false);
     }
+
+    return fullText;
+  }
+
+  const handleVoiceSend = useCallback(
+    (message: string) => handleSend(message),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [sessionId]
+  );
+
+  function handleTtsModeChange(mode: TtsMode) {
+    setTtsMode(mode);
+    localStorage.setItem("forgeai-tts-mode", mode);
   }
 
   return (
@@ -157,7 +177,20 @@ export function ChatInterface() {
           </div>
         )}
       </div>
-      <ChatInput onSend={handleSend} disabled={isStreaming} />
+      <ChatInput
+        onSend={handleSend}
+        disabled={isStreaming}
+        onActivateVoiceMode={() => setVoiceModeActive(true)}
+      />
+
+      {voiceModeActive && (
+        <VoiceConversationOverlay
+          onSendMessage={handleVoiceSend}
+          onClose={() => setVoiceModeActive(false)}
+          ttsMode={ttsMode}
+          onTtsModeChange={handleTtsModeChange}
+        />
+      )}
     </div>
   );
 }

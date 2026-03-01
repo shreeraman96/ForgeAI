@@ -6,6 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Send, X } from "lucide-react";
 import { ImageCapture } from "./image-capture";
 import { VoiceRecorder } from "./voice-recorder";
+import { VoiceModeToggle } from "./voice-mode-toggle";
 
 interface ImageAttachment {
   base64: string;
@@ -16,9 +17,10 @@ interface ImageAttachment {
 interface ChatInputProps {
   onSend: (message: string, image?: { base64: string; mimeType: string }) => void;
   disabled?: boolean;
+  onActivateVoiceMode?: () => void;
 }
 
-export function ChatInput({ onSend, disabled }: ChatInputProps) {
+export function ChatInput({ onSend, disabled, onActivateVoiceMode }: ChatInputProps) {
   const [input, setInput] = useState("");
   const [imageAttachment, setImageAttachment] = useState<ImageAttachment | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -106,6 +108,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         />
         <ImageCapture onCapture={handleCapture} disabled={disabled} />
         <VoiceRecorder onTranscription={handleTranscription} disabled={disabled} />
+        {onActivateVoiceMode && (
+          <VoiceModeToggle onActivate={onActivateVoiceMode} disabled={disabled} />
+        )}
         <Button
           type="submit"
           size="icon"
