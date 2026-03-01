@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -49,17 +50,27 @@ export function ExpertCaptureUpload({
 
     setUploading(true);
 
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    formData.append("title", title.trim());
-    if (description.trim()) {
-      formData.append("description", description.trim());
-    }
-
     try {
+      // Step 1: Upload directly to Vercel Blob (bypasses the serverless function
+      // payload limit — the file bytes never touch our API routes).
+      const blob = await upload(selectedFile.name, selectedFile, {
+        access: "public",
+        handleUploadUrl: "/api/blob/upload",
+        clientPayload: "expert-capture",
+      });
+
+      // Step 2: POST only the blob URL + metadata to create the DB record.
       const res = await fetch("/api/expert-captures", {
         method: "POST",
-        body: formData,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          blobUrl: blob.url,
+          fileName: selectedFile.name,
+          mimeType: selectedFile.type,
+          fileSize: selectedFile.size,
+          title: title.trim(),
+          description: description.trim() || undefined,
+        }),
       });
 
       if (!res.ok) {

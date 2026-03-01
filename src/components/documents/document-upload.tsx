@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import { upload } from "@vercel/blob/client";
 import { Button } from "@/components/ui/button";
 import { Upload, FileUp } from "lucide-react";
 import { toast } from "sonner";
@@ -15,12 +16,23 @@ export function DocumentUpload({ onUploadComplete }: DocumentUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function uploadFile(file: File) {
-    const formData = new FormData();
-    formData.append("file", file);
+    // Step 1: Upload directly to Vercel Blob (bypasses serverless payload limit).
+    const blob = await upload(file.name, file, {
+      access: "public",
+      handleUploadUrl: "/api/blob/upload",
+      clientPayload: "document",
+    });
 
+    // Step 2: POST only the blob URL + metadata to create the DB record.
     const res = await fetch("/api/documents", {
       method: "POST",
-      body: formData,
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        blobUrl: blob.url,
+        fileName: file.name,
+        mimeType: file.type,
+        fileSize: file.size,
+      }),
     });
 
     if (!res.ok) {
