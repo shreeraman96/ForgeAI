@@ -57,6 +57,7 @@ export function ExpertCaptureUpload({
         access: "public",
         handleUploadUrl: "/api/blob/upload",
         clientPayload: "expert-capture",
+        multipart: true,
       });
 
       // Step 2: POST only the blob URL + metadata to create the DB record.
