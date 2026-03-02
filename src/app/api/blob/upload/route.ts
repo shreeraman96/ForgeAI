@@ -19,12 +19,19 @@ import {
  * never pass through this serverless function, so there is no FUNCTION_PAYLOAD_TOO_LARGE error.
  */
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user || session.user.role !== "ADMIN") {
-    return Response.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
   const body = (await request.json()) as HandleUploadBody;
+
+  // IMPORTANT: This endpoint is called TWICE per upload:
+  //   1. "blob.generate-client-token" — from the browser (has user session) → auth required
+  //   2. "blob.upload-completed"       — from Vercel's infrastructure (no session) → no auth
+  // Applying a blanket session check here blocks the completion callback and
+  // causes Vercel Blob to fail the upload with "X-Length content header" errors.
+  if (body.type === "blob.generate-client-token") {
+    const session = await auth();
+    if (!session?.user || session.user.role !== "ADMIN") {
+      return Response.json({ error: "Unauthorized" }, { status: 401 });
+    }
+  }
 
   try {
     const jsonResponse = await handleUpload({
