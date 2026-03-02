@@ -4,7 +4,7 @@ import { writeFile, unlink } from "fs/promises";
 import { tmpdir } from "os";
 import { join } from "path";
 
-const GEMINI_MODEL = "gemini-2.0-flash";
+export const GEMINI_MODEL = "gemini-2.0-flash";
 const MAX_POLL_ATTEMPTS = 40; // 40 × 3s = 2 min max wait for file processing
 
 const RETRY_DELAYS_MS = [15_000, 30_000, 60_000]; // 15s, 30s, 60s
@@ -39,7 +39,7 @@ async function withRetry<T>(fn: () => Promise<T>, label: string): Promise<T> {
 let _genAI: GoogleGenerativeAI | null = null;
 let _fileManager: GoogleAIFileManager | null = null;
 
-function getGenAI(): GoogleGenerativeAI {
+export function getGenAI(): GoogleGenerativeAI {
   if (!_genAI) {
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) throw new Error("GEMINI_API_KEY environment variable is not set");

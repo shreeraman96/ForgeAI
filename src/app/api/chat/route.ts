@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/db";
 import { streamChatResponse } from "@/lib/ai/chat";
+import { streamChatResponseGemini } from "@/lib/ai/chat-gemini";
 import { chatMessageSchema } from "@/lib/validations";
 
 export async function POST(request: Request) {
@@ -14,7 +15,7 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const { message, sessionId, imageBase64, imageMimeType } =
+    const { message, sessionId, imageBase64, imageMimeType, useGemini } =
       chatMessageSchema.parse(body);
 
     // Get or create chat session
@@ -47,7 +48,8 @@ export async function POST(request: Request) {
     });
 
     // Stream AI response
-    const { stream, sourceChunks } = await streamChatResponse({
+    const chatFn = useGemini ? streamChatResponseGemini : streamChatResponse;
+    const { stream, sourceChunks } = await chatFn({
       message,
       organizationId: session.user.organizationId,
       organizationName: session.user.organizationName,

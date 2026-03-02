@@ -2,15 +2,16 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { X, Mic, Loader2, Volume2, Settings } from "lucide-react";
+import { X, Mic, Loader2, Volume2, Settings, Video, VideoOff } from "lucide-react";
 import {
   useVoiceConversation,
   type VoiceState,
   type TtsMode,
 } from "@/hooks/use-voice-conversation";
+import { useCameraStream } from "@/hooks/use-camera-stream";
 
 interface VoiceConversationOverlayProps {
-  onSendMessage: (message: string) => Promise<string>;
+  onSendMessage: (message: string, image?: { base64: string; mimeType: string }) => Promise<string>;
   onClose: () => void;
   ttsMode: TtsMode;
   onTtsModeChange: (mode: TtsMode) => void;
@@ -32,21 +33,35 @@ export function VoiceConversationOverlay({
 }: VoiceConversationOverlayProps) {
   const [showSettings, setShowSettings] = useState(false);
 
-  const handleClose = useCallback(() => {
-    voice.stop();
-    onClose();
+  const camera = useCameraStream();
+
+  // Wrap onSendMessage to capture a frame before sending
+  const wrappedSendMessage = useCallback(
+    async (text: string) => {
+      const frame = camera.captureFrame();
+      return onSendMessage(text, frame ?? undefined);
+    },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onClose]);
+    [onSendMessage, camera.captureFrame]
+  );
 
   const voice = useVoiceConversation({
-    onSendMessage,
+    onSendMessage: wrappedSendMessage,
     ttsMode,
     enabled: true,
   });
 
+  const handleClose = useCallback(() => {
+    voice.stop();
+    camera.stop();
+    onClose();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onClose, camera]);
+
   // Start on mount
   useEffect(() => {
     voice.start();
+    camera.start();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -75,6 +90,18 @@ export function VoiceConversationOverlay({
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center">
       {/* Header */}
       <div className="absolute top-4 right-4 flex items-center gap-2">
+        <Button
+          size="icon"
+          variant="ghost"
+          onClick={() => (camera.isActive ? camera.stop() : camera.start())}
+          title={camera.isActive ? "Turn off camera" : "Turn on camera"}
+        >
+          {camera.isActive ? (
+            <Video className="h-4 w-4" />
+          ) : (
+            <VideoOff className="h-4 w-4" />
+          )}
+        </Button>
         <Button
           size="icon"
           variant="ghost"
@@ -170,6 +197,19 @@ export function VoiceConversationOverlay({
       {/* Hint */}
       {voice.state === "speaking" && (
         <p className="mt-2 text-xs text-muted-foreground">Tap to interrupt</p>
+      )}
+
+      {/* Camera preview - PiP style */}
+      {camera.isActive && (
+        <div className="absolute bottom-8 left-8 w-36 h-28 rounded-lg overflow-hidden border-2 border-primary/30 shadow-lg bg-black">
+          <video
+            ref={camera.videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="w-full h-full object-cover"
+          />
+        </div>
       )}
     </div>
   );

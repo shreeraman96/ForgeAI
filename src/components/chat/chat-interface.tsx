@@ -34,7 +34,8 @@ export function ChatInterface() {
 
   async function handleSend(
     message: string,
-    image?: { base64: string; mimeType: string }
+    image?: { base64: string; mimeType: string },
+    useGemini?: boolean
   ): Promise<string> {
     const userMsg: Message = {
       id: `user-${Date.now()}`,
@@ -64,6 +65,7 @@ export function ChatInterface() {
             imageBase64: image.base64,
             imageMimeType: image.mimeType,
           }),
+          ...(useGemini && { useGemini: true }),
         }),
       });
 
@@ -129,7 +131,8 @@ export function ChatInterface() {
   }
 
   const handleVoiceSend = useCallback(
-    (message: string) => handleSend(message),
+    (message: string, image?: { base64: string; mimeType: string }) =>
+      handleSend(message, image, !!image),
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [sessionId]
   );

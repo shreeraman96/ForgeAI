@@ -43,6 +43,7 @@ export const chatMessageSchema = z.object({
   sessionId: z.string().optional(),
   imageBase64: z.string().optional(),
   imageMimeType: z.string().optional(),
+  useGemini: z.boolean().optional(),
 });
 
 export const inviteWorkerSchema = z.object({

@@ -4,7 +4,7 @@ import { searchSimilarChunks, SearchResult } from "@/lib/vectors";
 
 const openai = new OpenAI();
 
-function buildSystemPrompt(orgName: string, context: SearchResult[], hasImage: boolean): string {
+export function buildSystemPrompt(orgName: string, context: SearchResult[], hasImage: boolean): string {
   const contextBlock = context
     .map(
       (c, i) =>
