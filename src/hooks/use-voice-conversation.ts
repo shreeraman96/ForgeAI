@@ -206,10 +206,24 @@ export function useVoiceConversation({
   async function speakResponse(text: string): Promise<void> {
     if (!text.trim()) return;
 
-    if (ttsModeRef.current === "openai") {
-      return speakWithOpenAI(text);
+    // Release mic so mobile OS switches from earpiece to speaker for playback
+    streamRef.current?.getAudioTracks().forEach((t) => t.stop());
+
+    try {
+      if (ttsModeRef.current === "openai") {
+        await speakWithOpenAI(text);
+      } else {
+        await speakWithBrowser(text);
+      }
+    } finally {
+      // Re-acquire mic for next listening cycle
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+        streamRef.current = stream;
+      } catch {
+        // startListening will handle the missing stream gracefully
+      }
     }
-    return speakWithBrowser(text);
   }
 
   function speakWithBrowser(text: string): Promise<void> {
