@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 interface CapturedFrame {
   base64: string;
@@ -24,6 +24,13 @@ export function useCameraStream(): UseCameraStreamReturn {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  // Assign stream to video element once it mounts (isActive triggers render of <video>)
+  useEffect(() => {
+    if (isActive && videoRef.current && streamRef.current) {
+      videoRef.current.srcObject = streamRef.current;
+    }
+  }, [isActive]);
 
   const start = useCallback(async () => {
     try {
