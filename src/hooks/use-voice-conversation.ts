@@ -52,6 +52,7 @@ export function useVoiceConversation({
   const streamRef = useRef<MediaStream | null>(null);
   const silenceDetectorRef = useRef<SilenceDetector | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const levelPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const generationRef = useRef(0);
@@ -199,7 +200,7 @@ export function useVoiceConversation({
         silenceDetectorRef.current?.stop();
       }
     };
-    detector.start(stream);
+    detector.start(stream, audioContextRef.current ?? undefined);
     silenceDetectorRef.current = detector;
   }, []);
 
@@ -300,9 +301,12 @@ export function useVoiceConversation({
       });
       streamRef.current = stream;
 
-      // Create Audio element during user gesture (iOS requirement)
+      // Create Audio element and AudioContext during user gesture (iOS requirement)
       if (!audioElementRef.current) {
         audioElementRef.current = new Audio();
+      }
+      if (!audioContextRef.current || audioContextRef.current.state === "closed") {
+        audioContextRef.current = new AudioContext();
       }
 
       // Start polling audio level for UI visualization
@@ -352,6 +356,12 @@ export function useVoiceConversation({
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
 
+    // Close shared AudioContext
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      audioContextRef.current.close().catch(() => {});
+    }
+    audioContextRef.current = null;
+
     // Cancel TTS
     window.speechSynthesis?.cancel();
     if (audioElementRef.current) {
@@ -400,6 +410,9 @@ export function useVoiceConversation({
         window.speechSynthesis?.cancel();
         if (audioElementRef.current) {
           audioElementRef.current.pause();
+        }
+        if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+          audioContextRef.current.close().catch(() => {});
         }
       }
     };

@@ -1,5 +1,5 @@
 export interface SilenceDetector {
-  start(stream: MediaStream): void;
+  start(stream: MediaStream, sharedContext?: AudioContext): void;
   stop(): void;
   /** Returns current RMS audio level (0–1) for UI visualization. */
   getLevel(): number;
@@ -24,6 +24,7 @@ export function createSilenceDetector(
   const interval = options.pollInterval ?? 100;
 
   let audioContext: AudioContext | null = null;
+  let ownsContext = false; // true if we created the AudioContext (and should close it)
   let analyser: AnalyserNode | null = null;
   let source: MediaStreamAudioSourceNode | null = null;
   let intervalId: ReturnType<typeof setInterval> | null = null;
@@ -35,19 +36,24 @@ export function createSilenceDetector(
   const detector: SilenceDetector = {
     onSilence: null,
 
-    start(stream: MediaStream) {
+    start(stream: MediaStream, sharedContext?: AudioContext) {
       this.stop();
       triggered = false;
       heardSpeech = false;
 
-      audioContext = new AudioContext();
+      if (sharedContext) {
+        audioContext = sharedContext;
+        ownsContext = false;
+      } else {
+        audioContext = new AudioContext();
+        ownsContext = true;
+      }
+
       analyser = audioContext.createAnalyser();
       analyser.fftSize = 512;
       source = audioContext.createMediaStreamSource(stream);
       source.connect(analyser);
 
-      // iOS Safari may suspend AudioContext created outside user gesture,
-      // but start() is called from a user-initiated action so this should be fine.
       if (audioContext.state === "suspended") {
         audioContext.resume();
       }
@@ -91,10 +97,12 @@ export function createSilenceDetector(
       source = null;
       analyser?.disconnect();
       analyser = null;
-      if (audioContext && audioContext.state !== "closed") {
+      // Only close AudioContext if we created it
+      if (ownsContext && audioContext && audioContext.state !== "closed") {
         audioContext.close().catch(() => {});
       }
       audioContext = null;
+      ownsContext = false;
       silentSince = null;
       currentLevel = 0;
       triggered = false;
