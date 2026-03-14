@@ -92,11 +92,21 @@ export function useVoiceConversation({
     const recordingStartTime = Date.now();
     let recordedBlob: Blob | null = null;
 
+    // Safety net: if silence detection fails (e.g. AudioContext suspended on mobile),
+    // force-stop recording after 15 seconds so it never listens forever.
+    const maxRecordingTimeout = setTimeout(() => {
+      if (gen === generationRef.current && stateRef.current === "listening" && mediaRecorderRef.current?.state === "recording") {
+        mediaRecorderRef.current.stop();
+        silenceDetectorRef.current?.stop();
+      }
+    }, 15000);
+
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) recordedBlob = e.data;
     };
 
     recorder.onstop = async () => {
+      clearTimeout(maxRecordingTimeout);
       // Bail out if this handler belongs to a stale generation
       if (gen !== generationRef.current) return;
       if (stateRef.current === "idle") return; // stopped by user exit
@@ -217,10 +227,20 @@ export function useVoiceConversation({
         await speakWithBrowser(text);
       }
     } finally {
-      // Re-acquire mic for next listening cycle
+      // Re-acquire mic and create fresh AudioContext for next listening cycle
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
         streamRef.current = stream;
+        // Close old AudioContext and create a fresh one — the old one may be
+        // suspended after mic release and can't be resumed without user gesture
+        if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+          audioContextRef.current.close().catch(() => {});
+        }
+        const ctx = new AudioContext();
+        if (ctx.state === "suspended") {
+          await ctx.resume().catch(() => {});
+        }
+        audioContextRef.current = ctx;
       } catch {
         // startListening will handle the missing stream gracefully
       }
