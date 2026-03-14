@@ -99,7 +99,7 @@ export function useVoiceConversation({
         mediaRecorderRef.current.stop();
         silenceDetectorRef.current?.stop();
       }
-    }, 15000);
+    }, 8000);
 
     recorder.ondataavailable = (e) => {
       if (e.data.size > 0) recordedBlob = e.data;
@@ -227,22 +227,22 @@ export function useVoiceConversation({
         await speakWithBrowser(text);
       }
     } finally {
-      // Re-acquire mic and create fresh AudioContext for next listening cycle
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        streamRef.current = stream;
-        // Close old AudioContext and create a fresh one — the old one may be
-        // suspended after mic release and can't be resumed without user gesture
-        if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-          audioContextRef.current.close().catch(() => {});
+      // Only re-acquire mic if we're still in the normal flow (state is "speaking").
+      // If interrupted, interrupt() handles mic re-acquisition itself to avoid a race.
+      if (stateRef.current === "speaking") {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          streamRef.current = stream;
+          // Resume existing AudioContext instead of creating a new one — the original
+          // was created during a user gesture in start() and stays valid across cycles.
+          // Creating a new AudioContext here (outside user gesture) would start suspended
+          // on mobile and break silence detection.
+          if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+            await audioContextRef.current.resume().catch(() => {});
+          }
+        } catch {
+          // startListening will handle the missing stream gracefully
         }
-        const ctx = new AudioContext();
-        if (ctx.state === "suspended") {
-          await ctx.resume().catch(() => {});
-        }
-        audioContextRef.current = ctx;
-      } catch {
-        // startListening will handle the missing stream gracefully
       }
     }
   }
@@ -393,7 +393,7 @@ export function useVoiceConversation({
     setCurrentTranscript("");
   }, []);
 
-  const interrupt = useCallback(() => {
+  const interrupt = useCallback(async () => {
     if (stateRef.current !== "speaking") return;
 
     // Cancel TTS
@@ -407,13 +407,27 @@ export function useVoiceConversation({
     abortControllerRef.current?.abort();
     abortControllerRef.current = null;
 
-    // Resume listening
     updateState("listening");
-    setTimeout(() => {
-      if (stateRef.current === "listening") {
-        startListening();
+
+    // Re-acquire mic and resume AudioContext (speakResponse's finally
+    // block skips this when interrupted to avoid the race condition).
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+      streamRef.current = stream;
+      // Resume existing AudioContext — don't create a new one (see speakResponse comment)
+      if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+        await audioContextRef.current.resume().catch(() => {});
       }
-    }, 400);
+    } catch {
+      // If mic re-acquisition fails, stop voice mode
+      updateState("idle");
+      return;
+    }
+
+    // Now start listening with a valid stream and AudioContext
+    if (stateRef.current === "listening") {
+      startListening();
+    }
   }, [startListening]);
 
   // Cleanup on unmount
