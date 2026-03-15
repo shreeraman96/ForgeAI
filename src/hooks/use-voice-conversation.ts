@@ -217,8 +217,14 @@ export function useVoiceConversation({
   async function speakResponse(text: string): Promise<void> {
     if (!text.trim()) return;
 
-    // Release mic so mobile OS switches from earpiece to speaker for playback
+    // Release mic AND suspend AudioContext so the OS fully exits the recording
+    // audio session and routes TTS playback through the speaker instead of earpiece.
+    // Suspend (not close) preserves the context's "allowed" flag from the original
+    // user gesture so it can be resumed later for silence detection.
     streamRef.current?.getAudioTracks().forEach((t) => t.stop());
+    if (audioContextRef.current && audioContextRef.current.state === "running") {
+      await audioContextRef.current.suspend().catch(() => {});
+    }
 
     try {
       if (ttsModeRef.current === "openai") {
