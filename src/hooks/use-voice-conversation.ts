@@ -48,11 +48,9 @@ export function useVoiceConversation({
   // where the ref can be mutated externally by stop().
   const stateRef = useRef<string>("idle");
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
   const streamRef = useRef<MediaStream | null>(null);
   const silenceDetectorRef = useRef<SilenceDetector | null>(null);
   const audioElementRef = useRef<HTMLAudioElement | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const levelPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const generationRef = useRef(0);
@@ -66,6 +64,19 @@ export function useVoiceConversation({
   function updateState(newState: VoiceState) {
     stateRef.current = newState;
     setState(newState);
+  }
+
+  /** Acquire (or re-acquire) the microphone and store the stream. */
+  async function acquireMic(): Promise<MediaStream> {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+    streamRef.current = stream;
+    return stream;
+  }
+
+  /** Release the current mic stream so the OS exits the recording audio session. */
+  function releaseMic() {
+    streamRef.current?.getAudioTracks().forEach((t) => t.stop());
+    streamRef.current = null;
   }
 
   const startListening = useCallback(() => {
@@ -92,8 +103,7 @@ export function useVoiceConversation({
     const recordingStartTime = Date.now();
     let recordedBlob: Blob | null = null;
 
-    // Safety net: if silence detection fails (e.g. AudioContext suspended on mobile),
-    // force-stop recording after 15 seconds so it never listens forever.
+    // Safety net: force-stop recording after 8s if silence detection fails
     const maxRecordingTimeout = setTimeout(() => {
       if (gen === generationRef.current && stateRef.current === "listening" && mediaRecorderRef.current?.state === "recording") {
         mediaRecorderRef.current.stop();
@@ -202,7 +212,8 @@ export function useVoiceConversation({
     recorder.start();
     updateState("listening");
 
-    // Set up silence detection to auto-stop recording
+    // Set up silence detection to auto-stop recording.
+    // The detector creates and owns its own AudioContext internally.
     const detector = createSilenceDetector({ silenceDuration: 2000 });
     detector.onSilence = () => {
       if (gen === generationRef.current && stateRef.current === "listening" && mediaRecorderRef.current?.state === "recording") {
@@ -210,21 +221,16 @@ export function useVoiceConversation({
         silenceDetectorRef.current?.stop();
       }
     };
-    detector.start(stream, audioContextRef.current ?? undefined);
+    detector.start(stream);
     silenceDetectorRef.current = detector;
   }, []);
 
   async function speakResponse(text: string): Promise<void> {
     if (!text.trim()) return;
 
-    // Release mic AND close AudioContext so the OS fully exits the recording
-    // audio session and routes TTS playback through the speaker instead of earpiece.
-    // suspend() alone doesn't release the session on all mobile browsers — close() is needed.
-    streamRef.current?.getAudioTracks().forEach((t) => t.stop());
-    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-      audioContextRef.current.close().catch(() => {});
-    }
-    audioContextRef.current = null;
+    // Release mic so the OS exits the recording audio session and routes
+    // TTS playback through the speaker instead of the earpiece.
+    releaseMic();
 
     try {
       if (ttsModeRef.current === "openai") {
@@ -233,22 +239,13 @@ export function useVoiceConversation({
         await speakWithBrowser(text);
       }
     } finally {
-      // Only re-acquire mic if we're still in the normal flow (state is "speaking").
-      // If interrupted, interrupt() handles mic re-acquisition itself to avoid a race.
+      // Re-acquire mic for next listening cycle — but only if we're still in
+      // the normal flow. If interrupted, interrupt() handles this itself.
       if (stateRef.current === "speaking") {
         try {
-          // getUserMedia provides transient activation on mobile, which allows
-          // the new AudioContext to start in "running" state (not "suspended").
-          const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-          streamRef.current = stream;
-          audioContextRef.current = new AudioContext();
-          // Ensure the context is running — transient activation from getUserMedia
-          // should allow this even outside a direct user gesture.
-          if (audioContextRef.current.state === "suspended") {
-            await audioContextRef.current.resume().catch(() => {});
-          }
+          await acquireMic();
         } catch {
-          // startListening will handle the missing stream gracefully
+          // startListening will bail on null stream
         }
       }
     }
@@ -326,18 +323,11 @@ export function useVoiceConversation({
 
   const start = useCallback(async () => {
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-        video: false,
-      });
-      streamRef.current = stream;
+      await acquireMic();
 
-      // Create Audio element and AudioContext during user gesture (iOS requirement)
+      // Create Audio element during user gesture (iOS requirement)
       if (!audioElementRef.current) {
         audioElementRef.current = new Audio();
-      }
-      if (!audioContextRef.current || audioContextRef.current.state === "closed") {
-        audioContextRef.current = new AudioContext();
       }
 
       // Start polling audio level for UI visualization
@@ -387,12 +377,6 @@ export function useVoiceConversation({
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
 
-    // Close shared AudioContext
-    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-      audioContextRef.current.close().catch(() => {});
-    }
-    audioContextRef.current = null;
-
     // Cancel TTS
     window.speechSynthesis?.cancel();
     if (audioElementRef.current) {
@@ -420,27 +404,16 @@ export function useVoiceConversation({
 
     updateState("listening");
 
-    // Re-acquire mic first — getUserMedia provides transient activation on mobile,
-    // which allows the new AudioContext to start in "running" state.
+    // Re-acquire mic (speakResponse released it for speaker routing).
+    // speakResponse's finally block will see state !== "speaking" and skip
+    // its own mic re-acquisition, avoiding the race.
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-      streamRef.current = stream;
+      await acquireMic();
     } catch {
-      // If mic re-acquisition fails, stop voice mode
       updateState("idle");
       return;
     }
 
-    // Create AudioContext AFTER getUserMedia so it benefits from transient activation.
-    // speakResponse closed the old context to release the recording audio session.
-    if (!audioContextRef.current || audioContextRef.current.state === "closed") {
-      audioContextRef.current = new AudioContext();
-    }
-    if (audioContextRef.current.state === "suspended") {
-      await audioContextRef.current.resume().catch(() => {});
-    }
-
-    // Now start listening with a valid stream and active AudioContext
     if (stateRef.current as string === "listening") {
       startListening();
     }
@@ -460,9 +433,6 @@ export function useVoiceConversation({
         window.speechSynthesis?.cancel();
         if (audioElementRef.current) {
           audioElementRef.current.pause();
-        }
-        if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-          audioContextRef.current.close().catch(() => {});
         }
       }
     };
