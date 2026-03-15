@@ -217,14 +217,14 @@ export function useVoiceConversation({
   async function speakResponse(text: string): Promise<void> {
     if (!text.trim()) return;
 
-    // Release mic AND suspend AudioContext so the OS fully exits the recording
+    // Release mic AND close AudioContext so the OS fully exits the recording
     // audio session and routes TTS playback through the speaker instead of earpiece.
-    // Suspend (not close) preserves the context's "allowed" flag from the original
-    // user gesture so it can be resumed later for silence detection.
+    // suspend() alone doesn't release the session on all mobile browsers — close() is needed.
     streamRef.current?.getAudioTracks().forEach((t) => t.stop());
-    if (audioContextRef.current && audioContextRef.current.state === "running") {
-      await audioContextRef.current.suspend().catch(() => {});
+    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
+      audioContextRef.current.close().catch(() => {});
     }
+    audioContextRef.current = null;
 
     try {
       if (ttsModeRef.current === "openai") {
@@ -237,14 +237,15 @@ export function useVoiceConversation({
       // If interrupted, interrupt() handles mic re-acquisition itself to avoid a race.
       if (stateRef.current === "speaking") {
         try {
+          // getUserMedia provides transient activation on mobile, which allows
+          // the new AudioContext to start in "running" state (not "suspended").
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
           streamRef.current = stream;
-          // Resume the original AudioContext instead of creating a new one.
-          // The original was created during the user's start() gesture, so it has
-          // the browser's "allowed" flag. A new context created here (outside a
-          // gesture) would start suspended on mobile and break silence detection.
-          if (audioContextRef.current && audioContextRef.current.state === "suspended") {
-            audioContextRef.current.resume().catch(() => {});
+          audioContextRef.current = new AudioContext();
+          // Ensure the context is running — transient activation from getUserMedia
+          // should allow this even outside a direct user gesture.
+          if (audioContextRef.current.state === "suspended") {
+            await audioContextRef.current.resume().catch(() => {});
           }
         } catch {
           // startListening will handle the missing stream gracefully
@@ -419,16 +420,8 @@ export function useVoiceConversation({
 
     updateState("listening");
 
-    // Resume the original AudioContext (created during start() user gesture)
-    // instead of closing and creating a new one. The original has the browser's
-    // "allowed" flag; a new one created after the await below would start
-    // suspended on mobile and break silence detection.
-    if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-      audioContextRef.current.resume().catch(() => {});
-    }
-
-    // Re-acquire mic (speakResponse's finally block skips this when
-    // interrupted to avoid the race condition).
+    // Re-acquire mic first — getUserMedia provides transient activation on mobile,
+    // which allows the new AudioContext to start in "running" state.
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
       streamRef.current = stream;
@@ -438,7 +431,16 @@ export function useVoiceConversation({
       return;
     }
 
-    // Now start listening with a valid stream and resumed AudioContext
+    // Create AudioContext AFTER getUserMedia so it benefits from transient activation.
+    // speakResponse closed the old context to release the recording audio session.
+    if (!audioContextRef.current || audioContextRef.current.state === "closed") {
+      audioContextRef.current = new AudioContext();
+    }
+    if (audioContextRef.current.state === "suspended") {
+      await audioContextRef.current.resume().catch(() => {});
+    }
+
+    // Now start listening with a valid stream and active AudioContext
     if (stateRef.current as string === "listening") {
       startListening();
     }
