@@ -236,6 +236,11 @@ export function useVoiceConversation({
     silenceDetectorRef.current = null;
     releaseMic();
 
+    // Let iOS transition the audio session from "playAndRecord" to default.
+    // Without this delay, TTS fires into a transitioning session and may
+    // be routed to the earpiece or silently dropped.
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     try {
       if (ttsModeRef.current === "openai") {
         await speakWithOpenAI(text);
@@ -333,6 +338,19 @@ export function useVoiceConversation({
       if (!audioElementRef.current) {
         audioElementRef.current = new Audio();
       }
+
+      // Unlock audio APIs for iOS — both speechSynthesis and HTMLAudioElement
+      // must be activated during a user interaction, otherwise iOS silently
+      // blocks programmatic playback after the recording session is torn down.
+      // This is a no-op when start() is called from useEffect (non-gesture).
+      try { window.speechSynthesis?.speak(new SpeechSynthesisUtterance("")); } catch {}
+      try {
+        audioElementRef.current.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+        await audioElementRef.current.play();
+        audioElementRef.current.pause();
+        audioElementRef.current.currentTime = 0;
+        audioElementRef.current.src = "";
+      } catch {}
 
       // Start polling audio level for UI visualization
       levelPollRef.current = setInterval(() => {

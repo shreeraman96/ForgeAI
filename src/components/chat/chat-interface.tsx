@@ -183,7 +183,19 @@ export function ChatInterface() {
       <ChatInput
         onSend={handleSend}
         disabled={isStreaming}
-        onActivateVoiceMode={() => setVoiceModeActive(true)}
+        onActivateVoiceMode={() => {
+          // Unlock audio playback APIs during user gesture — iOS silently blocks
+          // programmatic audio (speechSynthesis, Audio.play) that wasn't first
+          // activated during a user interaction. Without this, TTS will be silent
+          // after the recording session is torn down for speaker routing.
+          try { window.speechSynthesis?.speak(new SpeechSynthesisUtterance("")); } catch {}
+          try {
+            const a = new Audio();
+            a.src = "data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA";
+            a.play().catch(() => {});
+          } catch {}
+          setVoiceModeActive(true);
+        }}
       />
 
       {voiceModeActive && (
