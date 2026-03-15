@@ -233,15 +233,13 @@ export function useVoiceConversation({
         try {
           const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
           streamRef.current = stream;
-          // Create a fresh AudioContext. The old one may be in "interrupted" state
-          // after the OS audio session changed (mic release → TTS → mic re-acquire).
-          // On some mobile browsers, getUserMedia provides transient activation that
-          // allows the new AudioContext to start running. If not, the 8s fallback
-          // timeout in startListening() ensures we never get stuck.
-          if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-            audioContextRef.current.close().catch(() => {});
+          // Resume the original AudioContext instead of creating a new one.
+          // The original was created during the user's start() gesture, so it has
+          // the browser's "allowed" flag. A new context created here (outside a
+          // gesture) would start suspended on mobile and break silence detection.
+          if (audioContextRef.current && audioContextRef.current.state === "suspended") {
+            audioContextRef.current.resume().catch(() => {});
           }
-          audioContextRef.current = new AudioContext();
         } catch {
           // startListening will handle the missing stream gracefully
         }
@@ -415,13 +413,13 @@ export function useVoiceConversation({
 
     updateState("listening");
 
-    // Create a FRESH AudioContext synchronously while we're still inside
-    // the user-gesture (tap) context. On mobile, AudioContexts created
-    // outside a user gesture start "suspended" and resume() won't help.
+    // Resume the original AudioContext (created during start() user gesture)
+    // instead of closing and creating a new one. The original has the browser's
+    // "allowed" flag; a new one created after the await below would start
+    // suspended on mobile and break silence detection.
     if (audioContextRef.current && audioContextRef.current.state !== "closed") {
-      audioContextRef.current.close().catch(() => {});
+      audioContextRef.current.resume().catch(() => {});
     }
-    audioContextRef.current = new AudioContext();
 
     // Re-acquire mic (speakResponse's finally block skips this when
     // interrupted to avoid the race condition).
@@ -434,8 +432,8 @@ export function useVoiceConversation({
       return;
     }
 
-    // Now start listening with a valid stream and fresh AudioContext
-    if (stateRef.current === "listening") {
+    // Now start listening with a valid stream and resumed AudioContext
+    if (stateRef.current as string === "listening") {
       startListening();
     }
   }, [startListening]);
