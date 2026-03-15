@@ -228,8 +228,12 @@ export function useVoiceConversation({
   async function speakResponse(text: string): Promise<void> {
     if (!text.trim()) return;
 
-    // Release mic so the OS exits the recording audio session and routes
-    // TTS playback through the speaker instead of the earpiece.
+    // Stop silence detector AND release mic so iOS fully exits the
+    // "playAndRecord" audio session and routes TTS through the speaker.
+    // The detector's internal AudioContext keeps the session alive even
+    // after mic tracks are stopped — both must be torn down.
+    silenceDetectorRef.current?.stop();
+    silenceDetectorRef.current = null;
     releaseMic();
 
     try {
