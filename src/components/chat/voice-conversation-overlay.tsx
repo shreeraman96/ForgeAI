@@ -8,6 +8,7 @@ import {
   type VoiceState,
   type TtsMode,
 } from "@/hooks/use-voice-conversation";
+import { ListOrdered } from "lucide-react";
 import { useCameraStream } from "@/hooks/use-camera-stream";
 
 interface VoiceConversationOverlayProps {
@@ -86,6 +87,8 @@ export function VoiceConversationOverlay({
   const circleScale =
     voice.state === "listening" ? 1 + voice.audioLevel * 0.3 : 1;
 
+  const isStepMode = voice.stepInfo !== null;
+
   return (
     <div className="fixed inset-0 z-50 bg-background/95 backdrop-blur-sm flex flex-col items-center justify-center">
       {/* Header */}
@@ -149,9 +152,9 @@ export function VoiceConversationOverlay({
         <span
           className={`absolute inset-0 rounded-full transition-colors duration-300 ${
             voice.state === "listening"
-              ? "bg-primary/20"
+              ? isStepMode ? "bg-blue-500/20" : "bg-primary/20"
               : voice.state === "speaking"
-              ? "bg-green-500/20"
+              ? isStepMode ? "bg-blue-500/20" : "bg-green-500/20"
               : voice.state === "transcribing" || voice.state === "thinking"
               ? "bg-yellow-500/20"
               : "bg-muted"
@@ -160,22 +163,26 @@ export function VoiceConversationOverlay({
 
         {/* Pulse ring when listening */}
         {voice.state === "listening" && (
-          <span className="absolute inset-0 rounded-full animate-ping bg-primary/10 pointer-events-none" />
+          <span className={`absolute inset-0 rounded-full animate-ping pointer-events-none ${isStepMode ? "bg-blue-500/10" : "bg-primary/10"}`} />
         )}
 
         {/* Speaking wave animation */}
         {voice.state === "speaking" && (
-          <span className="absolute inset-0 rounded-full animate-pulse bg-green-500/10 pointer-events-none" />
+          <span className={`absolute inset-0 rounded-full animate-pulse pointer-events-none ${isStepMode ? "bg-blue-500/10" : "bg-green-500/10"}`} />
         )}
 
         {/* Center icon */}
         <span className="relative z-10">
           {voice.state === "listening" ? (
-            <Mic className="h-12 w-12 text-primary" />
+            isStepMode
+              ? <ListOrdered className="h-12 w-12 text-blue-500" />
+              : <Mic className="h-12 w-12 text-primary" />
           ) : voice.state === "transcribing" || voice.state === "thinking" ? (
             <Loader2 className="h-12 w-12 text-yellow-500 animate-spin" />
           ) : voice.state === "speaking" ? (
-            <Volume2 className="h-12 w-12 text-green-500" />
+            isStepMode
+              ? <ListOrdered className="h-12 w-12 text-blue-500" />
+              : <Volume2 className="h-12 w-12 text-green-500" />
           ) : (
             <Mic className="h-12 w-12 text-muted-foreground" />
           )}
@@ -184,18 +191,34 @@ export function VoiceConversationOverlay({
 
       {/* State label */}
       <p className="mt-6 text-sm font-medium text-muted-foreground">
-        {STATE_LABELS[voice.state]}
+        {isStepMode
+          ? `Step ${voice.stepInfo!.current} of ${voice.stepInfo!.total}`
+          : STATE_LABELS[voice.state]}
       </p>
 
+      {/* Step card — shows current step text */}
+      {isStepMode && (
+        <div className="mt-3 mx-4 max-w-sm w-full px-4 py-3 bg-blue-500/8 rounded-xl border border-blue-500/20">
+          <p className="text-sm text-foreground/90 text-center leading-snug">
+            {voice.stepInfo!.text}
+          </p>
+        </div>
+      )}
+
       {/* Transcript display */}
-      {voice.currentTranscript && (
+      {voice.currentTranscript && !isStepMode && (
         <p className="mt-4 text-sm text-center max-w-sm px-4 text-foreground/80">
           &ldquo;{voice.currentTranscript}&rdquo;
         </p>
       )}
 
-      {/* Hint */}
-      {voice.state === "speaking" && (
+      {/* Hints */}
+      {isStepMode && voice.state === "listening" && (
+        <p className="mt-3 text-xs text-muted-foreground text-center px-4">
+          Say &ldquo;next&rdquo;, &ldquo;repeat&rdquo;, &ldquo;go back&rdquo;, or ask a question
+        </p>
+      )}
+      {!isStepMode && voice.state === "speaking" && (
         <p className="mt-2 text-xs text-muted-foreground">Tap to interrupt</p>
       )}
 

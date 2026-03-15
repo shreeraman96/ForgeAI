@@ -3,9 +3,17 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { createSilenceDetector, type SilenceDetector } from "@/lib/audio/silence-detector";
+import { parseSteps, type ParsedSteps } from "@/lib/voice/step-parser";
+import { matchVoiceCommand } from "@/lib/voice/command-matcher";
 
 export type VoiceState = "idle" | "listening" | "transcribing" | "thinking" | "speaking";
 export type TtsMode = "browser" | "openai";
+
+export interface StepInfo {
+  current: number; // 1-based
+  total: number;
+  text: string;
+}
 
 /** Picks the best MIME type supported by the current browser. iOS requires audio/mp4. */
 function getBestMimeType(): string {
@@ -33,6 +41,7 @@ export interface UseVoiceConversationReturn {
   interrupt: () => void;
   currentTranscript: string;
   audioLevel: number;
+  stepInfo: StepInfo | null;
 }
 
 export function useVoiceConversation({
@@ -43,6 +52,7 @@ export function useVoiceConversation({
   const [state, setState] = useState<VoiceState>("idle");
   const [currentTranscript, setCurrentTranscript] = useState("");
   const [audioLevel, setAudioLevel] = useState(0);
+  const [stepInfo, setStepInfo] = useState<StepInfo | null>(null);
 
   // Use `string` (not `VoiceState`) so TS doesn't narrow inside async closures
   // where the ref can be mutated externally by stop().
@@ -57,6 +67,10 @@ export function useVoiceConversation({
   const ttsModeRef = useRef(ttsMode);
   const onSendMessageRef = useRef(onSendMessage);
 
+  // Step delivery state — refs for async closures, state for reactive UI
+  const parsedStepsRef = useRef<ParsedSteps | null>(null);
+  const currentStepIndexRef = useRef<number>(0);
+
   // Keep refs in sync
   useEffect(() => { ttsModeRef.current = ttsMode; }, [ttsMode]);
   useEffect(() => { onSendMessageRef.current = onSendMessage; }, [onSendMessage]);
@@ -64,6 +78,17 @@ export function useVoiceConversation({
   function updateState(newState: VoiceState) {
     stateRef.current = newState;
     setState(newState);
+  }
+
+  /** Sync step refs + reactive state together. */
+  function updateStepState(steps: ParsedSteps | null, index: number) {
+    parsedStepsRef.current = steps;
+    currentStepIndexRef.current = index;
+    setStepInfo(
+      steps
+        ? { current: index + 1, total: steps.steps.length, text: steps.steps[index].text }
+        : null
+    );
   }
 
   /** Acquire (or re-acquire) the microphone and store the stream. */
@@ -171,26 +196,106 @@ export function useVoiceConversation({
         }
 
         setCurrentTranscript(text.trim());
+
+        // ── STEP MODE: intercept voice commands before sending to AI ─────────
+        if (parsedStepsRef.current) {
+          const cmd = matchVoiceCommand(text.trim().toLowerCase());
+          const steps = parsedStepsRef.current;
+          const idx = currentStepIndexRef.current;
+
+          if (cmd === "next" || cmd === "play") {
+            if (idx < steps.steps.length - 1) {
+              updateStepState(steps, idx + 1);
+              const nextStep = steps.steps[idx + 1];
+              updateState("speaking");
+              await speakResponse(`Step ${nextStep.number}: ${nextStep.text}`);
+            } else {
+              // All steps completed
+              updateStepState(null, 0);
+              updateState("speaking");
+              await speakResponse("That's all the steps. Great work!");
+            }
+            if (stateRef.current !== "speaking" || gen !== generationRef.current) return;
+            updateState("listening");
+            setTimeout(() => { if (stateRef.current === "listening" && gen === generationRef.current) startListening(); }, 400);
+            return;
+          }
+
+          if (cmd === "previous") {
+            if (idx > 0) {
+              updateStepState(steps, idx - 1);
+              const prevStep = steps.steps[idx - 1];
+              updateState("speaking");
+              await speakResponse(`Step ${prevStep.number}: ${prevStep.text}`);
+            } else {
+              updateState("speaking");
+              await speakResponse(`You're already on step 1: ${steps.steps[0].text}`);
+            }
+            if (stateRef.current !== "speaking" || gen !== generationRef.current) return;
+            updateState("listening");
+            setTimeout(() => { if (stateRef.current === "listening" && gen === generationRef.current) startListening(); }, 400);
+            return;
+          }
+
+          if (cmd === "repeat") {
+            updateState("speaking");
+            await speakResponse(`Step ${steps.steps[idx].number}: ${steps.steps[idx].text}`);
+            if (stateRef.current !== "speaking" || gen !== generationRef.current) return;
+            updateState("listening");
+            setTimeout(() => { if (stateRef.current === "listening" && gen === generationRef.current) startListening(); }, 400);
+            return;
+          }
+
+          if (cmd === "pause" || cmd === "exit-steps") {
+            updateStepState(null, 0);
+            updateState("listening");
+            setTimeout(() => { if (stateRef.current === "listening" && gen === generationRef.current) startListening(); }, 400);
+            return;
+          }
+
+          // Not a recognized command — fall through as a mid-step question
+        }
+        // ─────────────────────────────────────────────────────────────────────
+
         updateState("thinking");
 
-        // Send through existing chat pipeline
-        const responseText = await onSendMessageRef.current(text.trim());
+        // Prepend step context for mid-step questions so AI gives targeted answers
+        const stepCtx = parsedStepsRef.current;
+        const messageToSend = stepCtx
+          ? `[Context: I'm on step ${currentStepIndexRef.current + 1} of ${stepCtx.steps.length}: "${stepCtx.steps[currentStepIndexRef.current].text}"] ${text.trim()}`
+          : text.trim();
+
+        const responseText = await onSendMessageRef.current(messageToSend);
 
         if (gen !== generationRef.current) return; // interrupted during chat
         if (stateRef.current === "idle") return; // user exited during thinking
 
-        // Speak the response
         updateState("speaking");
-        await speakResponse(responseText);
 
-        // Only resume listening if we're still in "speaking" state AND
-        // this generation is still current. If user interrupted, state is
-        // already "listening" and interrupt() already called startListening().
+        if (stepCtx) {
+          // Answer the mid-step question, then return to the same step
+          await speakResponse(responseText);
+        } else {
+          // Check if the response is procedural → enter step mode
+          const parsed = parseSteps(responseText);
+          if (parsed) {
+            updateStepState(parsed, 0);
+            if (parsed.preamble) {
+              await speakResponse(parsed.preamble);
+              if (stateRef.current !== "speaking" || gen !== generationRef.current) return;
+            }
+            const total = parsed.steps.length;
+            await speakResponse(
+              `There are ${total} steps. Step 1: ${parsed.steps[0].text}. Say next when you're ready.`
+            );
+          } else {
+            await speakResponse(responseText);
+          }
+        }
+
         if (stateRef.current !== "speaking" || gen !== generationRef.current) return;
 
-        // Resume listening after speaking
         updateState("listening");
-        // iOS needs a delay after TTS releases the audio session
         setTimeout(() => {
           if (stateRef.current === "listening" && gen === generationRef.current) {
             startListening();
@@ -374,6 +479,9 @@ export function useVoiceConversation({
 
   const stop = useCallback(() => {
     updateState("idle");
+    parsedStepsRef.current = null;
+    currentStepIndexRef.current = 0;
+    setStepInfo(null);
 
     // Cancel in-flight requests
     abortControllerRef.current?.abort();
@@ -474,5 +582,6 @@ export function useVoiceConversation({
     interrupt,
     currentTranscript,
     audioLevel,
+    stepInfo,
   };
 }
