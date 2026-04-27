@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, getSession } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -58,7 +58,9 @@ function SignupForm() {
       setError("Account created but login failed. Please sign in manually.");
       setLoading(false);
     } else {
-      router.push("/admin");
+      const session = await getSession();
+      const destination = session?.user?.role === "ADMIN" ? "/admin" : "/chat";
+      router.push(destination);
       router.refresh();
     }
   }

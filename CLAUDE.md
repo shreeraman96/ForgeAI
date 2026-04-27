@@ -106,6 +106,12 @@ Used only for **STANDARD** document uploads:
 
 ## Known Issues & Learnings
 
+### CRITICAL: Verify Library APIs Against Installed Versions
+
+Do not assume API names from memory or prior versions. Libraries rename, remove, and restructure APIs across major versions, and using a stale name silently returns `undefined` at runtime — causing crashes with no useful error. This project has already been bitten by: `Zod v4` (`.issues` not `.errors`), `reanimated v4` (`Easing.sin` not `Easing.sine`), `expo-camera` SDK 54 (`CameraView` not `Camera`), `@google/generative-ai` (`GoogleGenerativeAI` not `GoogleGenAI`).
+
+**Rule:** After writing or modifying code that uses library APIs, run the type checker (`npx tsc --noEmit` or the build) before considering the task done. TypeScript catches renamed/removed APIs as `TS2551`/`TS2339` errors. If unsure about an API name, check the types in `node_modules/<package>/`.
+
 ### Prisma v7 + Neon: Driver Adapter Required
 
 Prisma v7's `prisma-client` TypeScript generator uses a WASM-based engine that requires a driver adapter. You CANNOT use `new PrismaClient()` alone.
@@ -354,8 +360,8 @@ const swSelf = self as unknown as WorkerGlobalScope;
 
 - Environment variables must be set in Vercel Dashboard (Settings > Environment Variables), NOT in `.env` files (`.env*` is gitignored)
 - **Without `NEXTAUTH_SECRET`**, NextAuth v5 throws `MissingSecret` in the Edge middleware on every request — this silently breaks all client-side `<Link>` navigation (clicks appear to do nothing)
-- Required env vars: `DATABASE_URL`, `NEXTAUTH_SECRET`, `NEXTAUTH_URL`, `OPENAI_API_KEY`, `BLOB_READ_WRITE_TOKEN`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`
-- `NEXTAUTH_URL` must be set to the actual Vercel deployment URL (e.g. `https://forgeai-chi.vercel.app`), not `localhost`
+- Required env vars: `DATABASE_URL`, `NEXTAUTH_SECRET`, `OPENAI_API_KEY`, `BLOB_READ_WRITE_TOKEN`, `GEMINI_API_KEY`, `ANTHROPIC_API_KEY`
+- **Do NOT set `NEXTAUTH_URL` on Vercel.** NextAuth v5 auto-detects the host via `VERCEL_URL`. Setting `NEXTAUTH_URL` to `http://localhost:3000` (e.g. by importing the local `.env`) causes post-login redirects to point at `localhost` in production. If you need it for invite-link generation in `src/app/api/workers/route.ts`, prefer reading `VERCEL_URL` / a dedicated `PUBLIC_APP_URL` instead.
 - `postinstall: "prisma generate"` in package.json ensures the Prisma client is generated before build (since `src/generated/prisma/` is gitignored)
 - To import all env vars at once: Vercel Dashboard → project → Settings → Environment Variables → "Import .env file"
 

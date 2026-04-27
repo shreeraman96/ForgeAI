@@ -86,7 +86,14 @@ export async function POST(request: Request) {
       },
     });
 
-    const inviteUrl = `${process.env.NEXTAUTH_URL}/signup?invite=${invite.token}`;
+    // Derive base URL from the incoming request so invites always point at the
+    // same origin the admin is using. Falls back to PUBLIC_APP_URL if set.
+    const forwardedHost = request.headers.get("x-forwarded-host");
+    const forwardedProto = request.headers.get("x-forwarded-proto");
+    const host = forwardedHost ?? request.headers.get("host");
+    const proto = forwardedProto ?? (host?.startsWith("localhost") ? "http" : "https");
+    const baseUrl = process.env.PUBLIC_APP_URL ?? (host ? `${proto}://${host}` : new URL(request.url).origin);
+    const inviteUrl = `${baseUrl}/signup?invite=${invite.token}`;
 
     return NextResponse.json({ invite, inviteUrl }, { status: 201 });
   } catch (error) {

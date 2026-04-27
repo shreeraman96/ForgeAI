@@ -19,20 +19,28 @@ export default auth((req) => {
   ) {
     // Redirect logged-in users away from auth pages
     if (isLoggedIn && (pathname.startsWith("/login") || pathname.startsWith("/signup"))) {
-      const redirectTo = role === "ADMIN" ? "/admin" : "/chat";
-      return NextResponse.redirect(new URL(redirectTo, req.url));
+      const url = req.nextUrl.clone();
+      url.pathname = role === "ADMIN" ? "/admin" : "/chat";
+      url.search = "";
+      return NextResponse.redirect(url);
     }
     return NextResponse.next();
   }
 
   // All other routes require auth
   if (!isLoggedIn) {
-    return NextResponse.redirect(new URL("/login", req.url));
+    const url = req.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = "";
+    return NextResponse.redirect(url);
   }
 
   // Workers cannot access admin routes
   if (pathname.startsWith("/admin") && role !== "ADMIN") {
-    return NextResponse.redirect(new URL("/chat", req.url));
+    const url = req.nextUrl.clone();
+    url.pathname = "/chat";
+    url.search = "";
+    return NextResponse.redirect(url);
   }
 
   return NextResponse.next();
