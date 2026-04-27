@@ -26,7 +26,8 @@ export async function POST(request: Request) {
 
     return Response.json({ text: transcription.text });
   } catch (error) {
-    console.error("Transcription error:", error);
-    return Response.json({ error: "Transcription failed" }, { status: 500 });
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("Transcription error:", message, error);
+    return Response.json({ error: `Transcription failed: ${message}` }, { status: 500 });
   }
 }

@@ -114,15 +114,15 @@ export function VoiceRecorder({ onTranscription, disabled }: VoiceRecorderProps)
         body: formData,
       });
 
-      if (!res.ok) throw new Error("Transcription failed");
-      const { text } = await res.json();
-      if (text?.trim()) {
-        onTranscription(text.trim());
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Transcription failed");
+      if (data.text?.trim()) {
+        onTranscription(data.text.trim());
       } else {
         toast.error("No speech detected. Please try again.");
       }
-    } catch {
-      toast.error("Transcription failed. Please try again.");
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Transcription failed. Please try again.");
     } finally {
       setState("idle");
     }
